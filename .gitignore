@@ -9,6 +9,7 @@ build/
 .venv/
 venv/
 env/
+.pytest_cache/
 
 # Django
 *.log
@@ -28,10 +29,8 @@ staticfiles/
 *.swp
 *.swo
 *~
+*.bak
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Project specific
-staticfiles/
