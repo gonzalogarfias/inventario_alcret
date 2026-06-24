@@ -6,15 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ALCRET - Inventario{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/logo-icon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
                     colors: {
-                        primary: { 50: '#e8f0ff', 100: '#c5d9ff', 200: '#9dbfff', 300: '#6ea0ff', 400: '#4080ff', 500: '#0d52eb', 600: '#0a42c4', 700: '#08349e', 800: '#062678', 900: '#041a52' },
-                        accent: { 50: '#fce8ed', 100: '#f7c5d1', 200: '#f09eb2', 300: '#e87493', 400: '#c94a6e', 500: '#9d1a41', 600: '#841535', 700: '#6b112a', 800: '#520d20', 900: '#390916' },
+                        primary: {
+                            50: '#eef3fa', 100: '#d4e1f2', 200: '#a9c3e6', 300: '#7ea5d9',
+                            400: '#5387cd', 500: '#2869c0', 600: '#0B3C95', 700: '#09307a',
+                            800: '#07245f', 900: '#051844',
+                        },
+                        surface: {
+                            DEFAULT: '#FAFAFC',
+                            card: '#FFFFFF',
+                        },
+                        ink: {
+                            DEFAULT: '#1E2229',
+                            secondary: '#687182',
+                            muted: '#9CA3AF',
+                        },
+                        success: { bg: '#E6F4EA', text: '#137333', border: '#CEEAD6' },
+                        error: { bg: '#FCE8E6', text: '#C5221F', border: '#F5C6C2' },
+                        warning: { bg: '#FEF7E0', text: '#B06000', border: '#FDEAA8' },
+                        info: { bg: '#E8F0FE', text: '#1A56DB', border: '#C3D9FC' },
                     }
                 }
             }
@@ -23,7 +45,7 @@
     <style>[x-cloak] { display: none !important; }</style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 font-sans antialiased min-h-screen flex items-center justify-center">
+<body class="bg-surface font-sans antialiased text-ink min-h-screen flex items-center justify-center">
     {% block content %}{% endblock %}
 </body>
 </html>

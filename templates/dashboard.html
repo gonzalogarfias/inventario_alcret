@@ -8,8 +8,8 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Productos</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_productos }}</p>
+                    <p class="text-sm text-ink-secondary font-medium">Productos</p>
+                    <p class="text-2xl font-bold text-ink mt-1">{{ total_productos }}</p>
                 </div>
                 <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
@@ -19,8 +19,8 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Almacenes</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_almacenes }}</p>
+                    <p class="text-sm text-ink-secondary font-medium">Almacenes</p>
+                    <p class="text-2xl font-bold text-ink mt-1">{{ total_almacenes }}</p>
                 </div>
                 <div class="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -30,10 +30,10 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Usuarios activos</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_usuarios }}</p>
+                    <p class="text-sm text-ink-secondary font-medium">Usuarios activos</p>
+                    <p class="text-2xl font-bold text-ink mt-1">{{ total_usuarios }}</p>
                 </div>
-                <div class="w-10 h-10 bg-accent-50 text-accent-600 rounded-lg flex items-center justify-center">
+                <div class="w-10 h-10 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
                 </div>
             </div>
@@ -41,8 +41,8 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Movimientos 30d</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1" x-text="movimientos30d">0</p>
+                    <p class="text-sm text-ink-secondary font-medium">Movimientos 30d</p>
+                    <p class="text-2xl font-bold text-ink mt-1" x-text="movimientos30d">0</p>
                 </div>
                 <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
@@ -53,19 +53,19 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 class="font-semibold text-gray-900 mb-4">Stock por categoría</h3>
+            <h3 class="font-semibold text-ink mb-4">Stock por categoría</h3>
             <canvas id="chartCategoria" height="200"></canvas>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 class="font-semibold text-gray-900 mb-4">Movimientos (últimos 30 días)</h3>
+            <h3 class="font-semibold text-ink mb-4">Movimientos (últimos 30 días)</h3>
             <canvas id="chartMovimientos" height="200"></canvas>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 class="font-semibold text-gray-900 mb-4">Stock por almacén</h3>
+            <h3 class="font-semibold text-ink mb-4">Stock por almacén</h3>
             <canvas id="chartAlmacen" height="200"></canvas>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 class="font-semibold text-gray-900 mb-4">Distribución de movimientos</h3>
+            <h3 class="font-semibold text-ink mb-4">Distribución de movimientos</h3>
             <canvas id="chartDistribucion" height="200"></canvas>
         </div>
     </div>
@@ -73,7 +73,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-gray-200">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-semibold text-gray-900">Últimos movimientos</h3>
+                <h3 class="font-semibold text-ink">Últimos movimientos</h3>
                 <a href="{% url 'movimiento_list' %}" class="text-xs text-primary-600 hover:text-primary-800 font-medium">Ver todos</a>
             </div>
             <div class="p-2">
@@ -88,25 +88,25 @@
                             <span class="text-xs font-bold">{{ m.tipo|first }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">{{ m.producto.nombre }}</p>
-                            <p class="text-xs text-gray-500">{{ m.almacen.nombre }} · {{ m.realizada_por.nombre|default:"Sistema" }}</p>
+                            <p class="text-sm font-medium text-ink truncate">{{ m.producto.nombre }}</p>
+                            <p class="text-xs text-ink-secondary">{{ m.almacen.nombre }} · {{ m.realizada_por.nombre|default:"Sistema" }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-sm font-semibold {% if m.tipo == 'ENTRADA' %}text-green-600{% elif m.tipo == 'SALIDA' %}text-red-600{% else %}text-amber-600{% endif %}">{{ m.cantidad|floatformat:0 }}</p>
-                            <p class="text-xs text-gray-400">{{ m.created_at|date:"H:i" }}</p>
+                            <p class="text-xs text-ink-muted">{{ m.created_at|date:"H:i" }}</p>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-sm text-gray-500 text-center py-8">No hay movimientos recientes.</p>
+                <p class="text-sm text-ink-secondary text-center py-8">No hay movimientos recientes.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-semibold text-gray-900">Stock bajo / sin stock</h3>
+                <h3 class="font-semibold text-ink">Stock bajo / sin stock</h3>
                 <a href="{% url 'producto_list' %}?stock=bajo" class="text-xs text-primary-600 hover:text-primary-800 font-medium">Ver todos</a>
             </div>
             <div class="p-2">
@@ -118,15 +118,15 @@
                             <span class="text-xs font-bold">{{ s.cantidad|floatformat:0 }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">{{ s.producto.nombre }}</p>
-                            <p class="text-xs text-gray-500">{{ s.almacen.nombre }} · SKU: {{ s.producto.sku }}</p>
+                            <p class="text-sm font-medium text-ink truncate">{{ s.producto.nombre }}</p>
+                            <p class="text-xs text-ink-secondary">{{ s.almacen.nombre }} · SKU: {{ s.producto.sku }}</p>
                         </div>
                         <a href="{% url 'movimiento_create' %}?producto={{ s.producto.id }}" class="text-xs text-primary-600 hover:text-primary-800 font-medium whitespace-nowrap">Reponer</a>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-sm text-gray-500 text-center py-8">Todos los productos tienen stock suficiente.</p>
+                <p class="text-sm text-ink-secondary text-center py-8">Todos los productos tienen stock suficiente.</p>
                 {% endif %}
             </div>
         </div>
@@ -134,32 +134,32 @@
 
     <div class="bg-white rounded-xl border border-gray-200 p-5">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-900">Reportes y exportación</h3>
+            <h3 class="font-semibold text-ink">Reportes y exportación</h3>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <a href="{% url 'exportar_productos_excel' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="w-9 h-9 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <div><p class="text-sm font-medium text-gray-900">Productos</p><p class="text-xs text-gray-500">Exportar Excel</p></div>
+                <div><p class="text-sm font-medium text-ink">Productos</p><p class="text-xs text-ink-secondary">Exportar Excel</p></div>
             </a>
             <a href="{% url 'exportar_movimientos_excel' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <div><p class="text-sm font-medium text-gray-900">Movimientos</p><p class="text-xs text-gray-500">Exportar Excel</p></div>
+                <div><p class="text-sm font-medium text-ink">Movimientos</p><p class="text-xs text-ink-secondary">Exportar Excel</p></div>
             </a>
             <a href="{% url 'exportar_auditoria_excel' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="w-9 h-9 bg-accent-50 text-accent-600 rounded-lg flex items-center justify-center">
+                <div class="w-9 h-9 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <div><p class="text-sm font-medium text-gray-900">Auditoría</p><p class="text-xs text-gray-500">Exportar Excel</p></div>
+                <div><p class="text-sm font-medium text-ink">Auditoría</p><p class="text-xs text-ink-secondary">Exportar Excel</p></div>
             </a>
             <a href="{% url 'exportar_productos_csv' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="w-9 h-9 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3M3 4h18"/></svg>
                 </div>
-                <div><p class="text-sm font-medium text-gray-900">Productos CSV</p><p class="text-xs text-gray-500">Exportar CSV</p></div>
+                <div><p class="text-sm font-medium text-ink">Productos CSV</p><p class="text-xs text-ink-secondary">Exportar CSV</p></div>
             </a>
         </div>
     </div>

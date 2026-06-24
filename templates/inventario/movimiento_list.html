@@ -6,7 +6,7 @@
     <div class="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <form method="get" class="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl">
             <div class="relative flex-1">
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por producto..."
                        class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
             </div>
@@ -38,7 +38,7 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                <tr class="bg-gray-50 text-ink-secondary text-xs uppercase tracking-wider">
                     <th class="text-left px-5 py-3 font-medium">Tipo</th>
                     <th class="text-left px-5 py-3 font-medium">Producto</th>
                     <th class="text-left px-5 py-3 font-medium">Almacén</th>
@@ -60,8 +60,8 @@
                         </span>
                     </td>
                     <td class="px-5 py-3.5">
-                        <a href="{% url 'producto_detail' m.producto.id %}" class="font-medium text-gray-900 hover:text-primary-600">{{ m.producto.nombre }}</a>
-                        <span class="text-gray-400 ml-1 font-mono text-xs">{{ m.producto.sku }}</span>
+                        <a href="{% url 'producto_detail' m.producto.id %}" class="font-medium text-ink hover:text-primary-600">{{ m.producto.nombre }}</a>
+                        <span class="text-ink-muted ml-1 font-mono text-xs">{{ m.producto.sku }}</span>
                     </td>
                     <td class="px-5 py-3.5 text-gray-600">{{ m.almacen.nombre }}</td>
                     <td class="px-5 py-3.5 text-right font-semibold {% if m.tipo == 'ENTRADA' %}text-green-600{% elif m.tipo == 'SALIDA' %}text-red-600{% else %}text-amber-600{% endif %}">
@@ -69,11 +69,11 @@
                     </td>
                     <td class="px-5 py-3.5 text-right text-gray-600">{% if m.costo_unitario %}${{ m.costo_unitario|floatformat:2 }}{% else %}—{% endif %}</td>
                     <td class="px-5 py-3.5 text-gray-600">{{ m.realizada_por.nombre|default:"Sistema" }}</td>
-                    <td class="px-5 py-3.5 text-right text-gray-500 whitespace-nowrap">{{ m.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="px-5 py-3.5 text-right text-ink-secondary whitespace-nowrap">{{ m.created_at|date:"d/m/Y H:i" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="px-5 py-12 text-center text-gray-500">
+                    <td colspan="7" class="px-5 py-12 text-center text-ink-secondary">
                         <p class="text-sm">No hay movimientos registrados.</p>
                         <a href="{% url 'movimiento_create' %}" class="text-primary-600 hover:text-primary-800 text-sm font-medium mt-1 inline-block">Registrar el primer movimiento</a>
                     </td>
@@ -84,7 +84,7 @@
     </div>
     {% if page_obj.paginator.num_pages > 1 %}
     <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-        <p class="text-xs text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
+        <p class="text-xs text-ink-secondary">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
         <div class="flex gap-1">
             {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Anterior</a>
