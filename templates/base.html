@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ALCRET - Inventario{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo-icon.png' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#e8f0ff', 100: '#c5d9ff', 200: '#9dbfff', 300: '#6ea0ff', 400: '#4080ff', 500: '#0d52eb', 600: '#0a42c4', 700: '#08349e', 800: '#062678', 900: '#041a52' },
+                        accent: { 50: '#fce8ed', 100: '#f7c5d1', 200: '#f09eb2', 300: '#e87493', 400: '#c94a6e', 500: '#9d1a41', 600: '#841535', 700: '#6b112a', 800: '#520d20', 900: '#390916' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .sidebar-transition { transition: width 0.3s ease; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 2px; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 font-sans antialiased" x-data="app()" x-cloak>
+    <div class="flex h-screen overflow-hidden">
+        {% include "components/sidebar.html" %}
+
+        <div class="flex-1 flex flex-col min-w-0">
+            {% include "components/topbar.html" %}
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin bg-gray-50">
+                {% if messages %}
+                <div class="mb-4 space-y-2" id="messages-container">
+                    {% for message in messages %}
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium shadow-sm
+                        {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                        {% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+                        {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-700 border border-yellow-200
+                        {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+                        <span>{% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✓{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}</span>
+                        <span class="flex-1">{{ message }}</span>
+                        <button @click="$el.parentElement.remove()" class="text-current opacity-50 hover:opacity-100">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% include "components/toast.html" %}
+
+    <script src="{% static 'js/app.js' %}"></script>
+    <script>
+        function app() {
+            return {
+                sidebarOpen: true,
+                userMenuOpen: false,
+                toggleSidebar() {
+                    this.sidebarOpen = !this.sidebarOpen
+                },
+                toast(message, type = 'success') {
+                    const container = document.getElementById('toast-container')
+                    const colors = {
+                        success: 'bg-green-50 border-green-200 text-green-700',
+                        error: 'bg-red-50 border-red-200 text-red-700',
+                        warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+                        info: 'bg-blue-50 border-blue-200 text-blue-700'
+                    }
+                    const el = document.createElement('div')
+                    el.className = `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium shadow-lg border ${colors[type] || colors.info} animate-slide-in`
+                    el.innerHTML = `<span class="flex-1">${message}</span><button @click="this.remove()" class="text-current opacity-50 hover:opacity-100">&times;</button>`
+                    container.appendChild(el)
+                    setTimeout(() => { el.remove() }, 4000)
+                }
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ALCRET - Inventario{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo-icon.png' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#e8f0ff', 100: '#c5d9ff', 200: '#9dbfff', 300: '#6ea0ff', 400: '#4080ff', 500: '#0d52eb', 600: '#0a42c4', 700: '#08349e', 800: '#062678', 900: '#041a52' },
+                        accent: { 50: '#fce8ed', 100: '#f7c5d1', 200: '#f09eb2', 300: '#e87493', 400: '#c94a6e', 500: '#9d1a41', 600: '#841535', 700: '#6b112a', 800: '#520d20', 900: '#390916' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>[x-cloak] { display: none !important; }</style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 font-sans antialiased min-h-screen flex items-center justify-center">
+    {% block content %}{% endblock %}
+</body>
+</html>

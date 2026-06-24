@@ -1,0 +1,17 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.git/
+.gitignore
+.github/
+*.sqlite3
+media/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+reports/

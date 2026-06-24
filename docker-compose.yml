@@ -1,0 +1,100 @@
+version: "3.9"
+
+x-django-env: &django-env
+  DJANGO_SETTINGS_MODULE: config.settings.production
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?error}
+  DJANGO_DEBUG: "${DJANGO_DEBUG:-False}"
+  ALLOWED_HOSTS: "${ALLOWED_HOSTS:-localhost,inventario.local}"
+  DB_NAME: ${DB_NAME:-inventario}
+  DB_USER: ${DB_USER:-inventario}
+  DB_PASSWORD: ${DB_PASSWORD:?error}
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  CELERY_BROKER_URL: redis://redis:6379/1
+  EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+  EMAIL_PORT: ${EMAIL_PORT:-587}
+  EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+  EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+  CRM_WEBHOOK_URL: ${CRM_WEBHOOK_URL:-}
+  CRM_HMAC_SECRET: ${CRM_HMAC_SECRET:-}
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME:-inventario}
+      POSTGRES_USER: ${DB_USER:-inventario}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?error}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${DB_USER:-inventario} -d ${DB_NAME:-inventario}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  django:
+    build: .
+    environment:
+      <<: *django-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - staticfiles:/app/staticfiles
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120 --access-logfile -"
+    healthcheck:
+      test: curl -f http://localhost:8000/health/ || exit 1
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  celery-worker:
+    build: .
+    environment:
+      <<: *django-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config worker --loglevel=info
+
+  celery-beat:
+    build: .
+    environment:
+      <<: *django-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config beat --loglevel=info
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - staticfiles:/static:ro
+    depends_on:
+      - django
+
+volumes:
+  postgres_data:
+  staticfiles:

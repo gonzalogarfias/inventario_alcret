@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block page_title %}Auditoría{% endblock %}
+{% block page_subtitle %}Registro inmutable de eventos del sistema{% endblock %}
+{% block content %}
+<div class="bg-white rounded-xl border border-gray-200">
+    <div class="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <form method="get" class="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl">
+            <div class="relative flex-1">
+                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por email o IP..."
+                       class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
+            </div>
+            <select name="evento" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                <option value="">Todos los eventos</option>
+                {% for k, v in eventos %}
+                <option value="{{ k }}" {% if request.GET.evento == k %}selected{% endif %}>{{ v }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Filtrar</button>
+        </form>
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Exportar
+            </button>
+            <div x-show="open" x-transition @click.outside="open = false" class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                <a href="{% url 'exportar_auditoria_csv' %}{% if request.GET.evento %}?evento={{ request.GET.evento }}{% endif %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">CSV</a>
+                <a href="{% url 'exportar_auditoria_excel' %}{% if request.GET.evento %}?evento={{ request.GET.evento }}{% endif %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <th class="text-left px-5 py-3 font-medium">Evento</th>
+                    <th class="text-left px-5 py-3 font-medium">Usuario</th>
+                    <th class="text-left px-5 py-3 font-medium">IP</th>
+                    <th class="text-left px-5 py-3 font-medium">Detalle</th>
+                    <th class="text-right px-5 py-3 font-medium">Fecha</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for log in logs %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-5 py-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if log.evento == 'ENTRADA' %}bg-green-50 text-green-700
+                            {% elif log.evento == 'SALIDA' %}bg-red-50 text-red-700
+                            {% elif log.evento == 'AJUSTE' %}bg-amber-50 text-amber-700
+                            {% elif log.evento == 'LOGIN_FAIL' %}bg-red-50 text-red-700
+                            {% elif log.evento == 'LOGIN_OK' %}bg-blue-50 text-blue-700
+                            {% else %}bg-gray-50 text-gray-700{% endif %}">
+                            {{ log.get_evento_display }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-gray-700">{{ log.usuario.email|default:"—" }}</td>
+                    <td class="px-5 py-3 font-mono text-xs text-gray-500">{{ log.ip_address }}</td>
+                    <td class="px-5 py-3 text-gray-500 max-w-xs truncate">{{ log.datos|default:"" }}</td>
+                    <td class="px-5 py-3 text-right text-gray-500 whitespace-nowrap">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-5 py-12 text-center text-gray-500 text-sm">No hay registros de auditoría.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+        <p class="text-xs text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
+        <div class="flex gap-1">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.evento %}&evento={{ request.GET.evento }}{% endif %}" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Anterior</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.evento %}&evento={{ request.GET.evento }}{% endif %}" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

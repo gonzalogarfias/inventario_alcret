@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block page_title %}Categorías{% endblock %}
+{% block page_subtitle %}Clasificación de productos{% endblock %}
+{% block content %}
+<div class="bg-white rounded-xl border border-gray-200">
+    <div class="p-4 md:p-5 border-b border-gray-100 flex items-center justify-between">
+        <p class="text-sm text-gray-500">{{ categorias|length }} categorías</p>
+        <a href="{% url 'categoria_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Nueva categoría
+        </a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <th class="text-left px-5 py-3 font-medium">Nombre</th>
+                    <th class="text-left px-5 py-3 font-medium">Descripción</th>
+                    <th class="text-left px-5 py-3 font-medium">Estado</th>
+                    <th class="text-right px-5 py-3 font-medium">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for c in categorias %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-5 py-3.5 font-medium text-gray-900">{{ c.nombre }}</td>
+                    <td class="px-5 py-3.5 text-gray-500">{{ c.descripcion|default:"—"|truncatechars:60 }}</td>
+                    <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if c.activo %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %}">
+                            {% if c.activo %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3.5 text-right">
+                        <a href="{% url 'categoria_update' c.id %}" class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-800 font-medium">Editar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-5 py-12 text-center text-gray-500 text-sm">No hay categorías registradas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

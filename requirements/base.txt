@@ -1,0 +1,14 @@
+Django>=4.2,<5.0
+psycopg2-binary
+django-axes
+django-guardian
+# django-pwned-passwords  # usa ugettext (eliminado en Django 4.2). Pendiente de alternativa
+argon2-cffi
+celery
+redis
+djangorestframework
+python-decouple
+gunicorn
+whitenoise
+requests
+openpyxl

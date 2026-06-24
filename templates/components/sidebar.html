@@ -1,0 +1,93 @@
+<aside class="bg-white border-r border-gray-200 flex flex-col sidebar-transition"
+       :class="sidebarOpen ? 'w-64' : 'w-16'">
+{% load static %}
+    <div class="h-16 flex items-center px-4 border-b border-gray-200">
+        <img src="{% static 'img/logo-icon.png' %}" alt="A"
+             class="h-9 w-auto flex-shrink-0 object-contain"
+             :class="sidebarOpen && 'hidden'">
+        <img src="{% static 'img/logo.png' %}" alt="ALCRET"
+             class="h-9 w-auto object-contain"
+             :class="!sidebarOpen && 'hidden'">
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1 scrollbar-thin">
+        {% url 'dashboard' as url_dashboard %}
+        {% url 'producto_list' as url_productos %}
+        {% url 'movimiento_list' as url_movimientos %}
+        {% url 'categoria_list' as url_categorias %}
+        {% url 'almacen_list' as url_almacenes %}
+        {% url 'auditlog_list' as url_auditoria %}
+        {% url 'usuario_list' as url_usuarios %}
+
+        <a href="{{ url_dashboard }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if request.path == url_dashboard %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span x-show="sidebarOpen" x-transition>Dashboard</span>
+        </a>
+        <a href="{{ url_productos }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/productos/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <span x-show="sidebarOpen" x-transition>Productos</span>
+        </a>
+        <a href="{{ url_movimientos }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/movimientos/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+            <span x-show="sidebarOpen" x-transition>Movimientos</span>
+        </a>
+        <a href="{{ url_categorias }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/categorias/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span x-show="sidebarOpen" x-transition>Categorías</span>
+        </a>
+        <a href="{{ url_almacenes }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/almacenes/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span x-show="sidebarOpen" x-transition>Almacenes</span>
+        </a>
+        <a href="{{ url_auditoria }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/auditoria/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span x-show="sidebarOpen" x-transition>Auditoría</span>
+        </a>
+        {% if user.rol == 'ADMIN' %}
+        <a href="{{ url_usuarios }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {% if '/usuarios/' in request.path %}bg-accent-50
+text-accent-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+           :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+            <span x-show="sidebarOpen" x-transition>Usuarios</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="p-3 border-t border-gray-200">
+        <button @click="toggleSidebar()"
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                :class="!sidebarOpen && 'justify-center'">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      :d="sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'"/>
+            </svg>
+            <span x-show="sidebarOpen" x-transition>Colapsar</span>
+        </button>
+    </div>
+</aside>
