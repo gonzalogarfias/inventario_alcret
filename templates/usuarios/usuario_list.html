@@ -2,7 +2,7 @@
 {% block page_title %}Usuarios{% endblock %}
 {% block page_subtitle %}Gestión de usuarios del sistema{% endblock %}
 {% block content %}
-<div class="bg-white rounded-xl border border-gray-200">
+<div class="bg-white rounded-xl shadow-sm border-0 card-hover">
     <div class="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <form method="get" class="flex-1 max-w-md">
             <div class="relative">
@@ -19,7 +19,7 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="bg-gray-50 text-ink-secondary text-xs uppercase tracking-wider">
+                <tr class="bg-primary-50/50 text-ink-secondary text-xs uppercase tracking-wider">
                     <th class="text-left px-5 py-3 font-medium">Email</th>
                     <th class="text-left px-5 py-3 font-medium">Nombre</th>
                     <th class="text-left px-5 py-3 font-medium">Rol</th>
@@ -43,8 +43,8 @@
                     </td>
                     <td class="px-5 py-3.5">
                         <span class="inline-flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full {% if u.activo %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
-                            <span class="text-xs {% if u.activo %}text-green-700{% else %}text-red-700{% endif %}">{% if u.activo %}Activo{% else %}Inactivo{% endif %}</span>
+                            <span class="w-2 h-2 rounded-full {% if u.activo %}bg-success-text{% else %}bg-error-text{% endif %}"></span>
+                            <span class="text-xs {% if u.activo %}text-success-text{% else %}text-error-text{% endif %}">{% if u.activo %}Activo{% else %}Inactivo{% endif %}</span>
                         </span>
                     </td>
                     <td class="px-5 py-3.5 text-right text-ink-secondary text-xs">{{ u.ultimo_acceso|date:"d/m/Y H:i"|default:"—" }}</td>

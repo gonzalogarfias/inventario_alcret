@@ -6,12 +6,12 @@
     <div class="flex items-center gap-3">
         <a href="{% url 'producto_list' %}" class="text-sm text-ink-secondary hover:text-gray-700">&larr; Volver a productos</a>
         <a href="{% url 'producto_update' producto.id %}" class="ml-auto px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700">Editar</a>
-        <a href="{% url 'movimiento_create' %}?producto={{ producto.id }}" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">Registrar movimiento</a>
+        <a href="{% url 'movimiento_create' %}?producto={{ producto.id }}" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700">Registrar movimiento</a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <div class="bg-white rounded-xl shadow-sm border-0 p-5">
                 <h3 class="font-semibold text-ink mb-3">Información del producto</h3>
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div><dt class="text-ink-secondary">SKU</dt><dd class="font-medium text-ink font-mono">{{ producto.sku }}</dd></div>
@@ -19,7 +19,7 @@
                     <div><dt class="text-ink-secondary">Precio de venta</dt><dd class="font-medium text-ink">${{ producto.precio_venta|floatformat:2 }}</dd></div>
                     <div><dt class="text-ink-secondary">Costo promedio</dt><dd class="font-medium text-ink">${{ producto.costo_promedio|floatformat:2 }}</dd></div>
                     <div><dt class="text-ink-secondary">Stock mínimo</dt><dd class="font-medium text-ink">{{ producto.stock_minimo|floatformat:0 }}</dd></div>
-                    <div><dt class="text-ink-secondary">Estado</dt><dd class="font-medium {% if producto.activo %}text-green-600{% else %}text-red-600{% endif %}">{% if producto.activo %}Activo{% else %}Inactivo{% endif %}</dd></div>
+                    <div><dt class="text-ink-secondary">Estado</dt><dd class="font-medium {% if producto.activo %}text-success-text{% else %}text-error-text{% endif %}">{% if producto.activo %}Activo{% else %}Inactivo{% endif %}</dd></div>
                 </dl>
                 {% if producto.descripcion %}
                 <div class="mt-4 pt-4 border-t border-gray-100">
@@ -29,7 +29,7 @@
                 {% endif %}
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200">
+            <div class="bg-white rounded-xl shadow-sm border-0">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <h3 class="font-semibold text-ink">Stock por almacén</h3>
                 </div>
@@ -39,7 +39,7 @@
                         {% for s in stocks %}
                         <div class="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50">
                             <span class="text-sm font-medium text-ink">{{ s.almacen.nombre }}</span>
-                            <span class="text-sm font-semibold {% if s.cantidad <= producto.stock_minimo %}text-red-600{% else %}text-green-600{% endif %}">
+                            <span class="text-sm font-semibold {% if s.cantidad <= producto.stock_minimo %}text-error-text{% else %}text-success-text{% endif %}">
                                 {{ s.cantidad|floatformat:2 }}
                             </span>
                         </div>
@@ -61,8 +61,8 @@
                 <div class="space-y-1">
                     {% for m in movimientos %}
                     <div class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm">
-                        <span class="w-2 h-2 rounded-full flex-shrink-0 {% if m.tipo == 'ENTRADA' %}bg-green-500{% elif m.tipo == 'SALIDA' %}bg-red-500{% else %}bg-amber-500{% endif %}"></span>
-                        <span class="font-medium {% if m.tipo == 'ENTRADA' %}text-green-600{% elif m.tipo == 'SALIDA' %}text-red-600{% else %}text-amber-600{% endif %}">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0 {% if m.tipo == 'ENTRADA' %}bg-success-text{% elif m.tipo == 'SALIDA' %}bg-error-text{% else %}bg-warning-text{% endif %}"></span>
+                        <span class="font-medium {% if m.tipo == 'ENTRADA' %}text-success-text{% elif m.tipo == 'SALIDA' %}text-error-text{% else %}text-warning-text{% endif %}">
                             {{ m.cantidad|floatformat:0 }}
                         </span>
                         <span class="text-ink-secondary flex-1">{{ m.almacen.nombre }}</span>

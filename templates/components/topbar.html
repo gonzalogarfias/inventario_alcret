@@ -1,21 +1,28 @@
-<header class="h-16 bg-surface-card border-b border-gray-200 flex items-center justify-between px-4 md:px-6">
+<header class="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6">
     <div class="flex items-center gap-4">
-        <button @click="toggleSidebar()" class="p-2 rounded-lg text-ink-secondary hover:bg-gray-100 hover:text-ink transition-colors lg:hidden">
+        <button @click="toggleSidebar()" class="p-2 rounded-lg text-ink-secondary hover:bg-gray-50 hover:text-ink transition-colors hidden md:inline-flex lg:hidden">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
         </button>
-        <div>
-            <h2 class="text-sm font-semibold text-ink">{% block page_title %}Dashboard{% endblock %}</h2>
-            <p class="text-xs text-ink-secondary">{% block page_subtitle %}Resumen del inventario{% endblock %}</p>
+        <div x-data="{ active: '{{ request.resolver_match.url_name }}' }">
+            <span class="text-sm font-semibold text-primary-600 uppercase tracking-wider"
+                  x-text="active.startsWith('producto') ? 'Productos' :
+                           active.startsWith('movimiento') ? 'Movimientos' :
+                           active.startsWith('categoria') ? 'Categorías' :
+                           active.startsWith('almacen') ? 'Almacenes' :
+                           active.startsWith('usuario') ? 'Usuarios' :
+                           active.startsWith('auditlog') ? 'Auditoría' :
+                           'Dashboard'"></span>
+            <p class="text-xs text-ink-secondary mt-0.5">{% block page_subtitle %}Resumen del inventario{% endblock %}</p>
         </div>
     </div>
 
     <div class="flex items-center gap-3">
         <div class="relative" x-data="{ open: false }">
             <button @click="open = !open" @click.outside="open = false"
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                <div class="w-7 h-7 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">
+                    class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="w-8 h-8 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">
                     {{ user.nombre|first|upper }}
                 </div>
                 <span class="text-sm font-medium text-ink-secondary hidden sm:block">{{ user.nombre }}</span>
@@ -24,16 +31,16 @@
                 </svg>
             </button>
             <div x-show="open" x-transition @click.outside="open = false"
-                 class="absolute right-0 mt-2 w-56 bg-surface-card rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                <div class="px-4 py-2 border-b border-gray-100">
+                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                <div class="px-4 py-2.5 border-b border-gray-100">
                     <p class="text-sm font-medium text-ink">{{ user.nombre }}</p>
-                    <p class="text-xs text-ink-secondary">{{ user.email }}</p>
+                    <p class="text-xs text-ink-secondary mt-0.5">{{ user.email }}</p>
                 </div>
-                <div class="px-2 py-1">
+                <div class="px-3 py-1.5">
                     <span class="block px-2 py-1.5 text-xs text-ink-secondary">Rol: <strong>{{ user.get_rol_display }}</strong></span>
                 </div>
                 <div class="border-t border-gray-100 mt-1 pt-1">
-                    <a href="{% url 'logout' %}" class="flex items-center gap-2 px-4 py-2 text-sm text-error-text hover:bg-error-bg transition-colors">
+                    <a href="{% url 'logout' %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-error-text hover:bg-error-bg transition-colors rounded-lg mx-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                         </svg>

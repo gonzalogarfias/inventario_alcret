@@ -5,7 +5,7 @@
 {% block content %}
 <div class="space-y-6" x-data="dashboardCharts()" x-init="init()">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-ink-secondary font-medium">Productos</p>
@@ -16,7 +16,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-ink-secondary font-medium">Almacenes</p>
@@ -27,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-ink-secondary font-medium">Usuarios activos</p>
@@ -38,7 +38,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-ink-secondary font-medium">Movimientos 30d</p>
@@ -52,19 +52,19 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <h3 class="font-semibold text-ink mb-4">Stock por categoría</h3>
             <canvas id="chartCategoria" height="200"></canvas>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <h3 class="font-semibold text-ink mb-4">Movimientos (últimos 30 días)</h3>
             <canvas id="chartMovimientos" height="200"></canvas>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <h3 class="font-semibold text-ink mb-4">Stock por almacén</h3>
             <canvas id="chartAlmacen" height="200"></canvas>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
             <h3 class="font-semibold text-ink mb-4">Distribución de movimientos</h3>
             <canvas id="chartDistribucion" height="200"></canvas>
         </div>
@@ -82,9 +82,9 @@
                     {% for m in ultimos_movimientos %}
                     <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                            {% if m.tipo == 'ENTRADA' %}bg-green-50 text-green-600
-                            {% elif m.tipo == 'SALIDA' %}bg-red-50 text-red-600
-                            {% else %}bg-amber-50 text-amber-600{% endif %}">
+                            {% if m.tipo == 'ENTRADA' %}bg-success-bg text-success-text
+                            {% elif m.tipo == 'SALIDA' %}bg-error-bg text-error-text
+                            {% else %}bg-warning-bg text-warning-text{% endif %}">
                             <span class="text-xs font-bold">{{ m.tipo|first }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
@@ -92,7 +92,7 @@
                             <p class="text-xs text-ink-secondary">{{ m.almacen.nombre }} · {{ m.realizada_por.nombre|default:"Sistema" }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-sm font-semibold {% if m.tipo == 'ENTRADA' %}text-green-600{% elif m.tipo == 'SALIDA' %}text-red-600{% else %}text-amber-600{% endif %}">{{ m.cantidad|floatformat:0 }}</p>
+                            <p class="text-sm font-semibold {% if m.tipo == 'ENTRADA' %}text-success-text{% elif m.tipo == 'SALIDA' %}text-error-text{% else %}text-warning-text{% endif %}">{{ m.cantidad|floatformat:0 }}</p>
                             <p class="text-xs text-ink-muted">{{ m.created_at|date:"H:i" }}</p>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200">
+        <div class="bg-white rounded-xl shadow-sm border-0 card-hover">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="font-semibold text-ink">Stock bajo / sin stock</h3>
                 <a href="{% url 'producto_list' %}?stock=bajo" class="text-xs text-primary-600 hover:text-primary-800 font-medium">Ver todos</a>
@@ -114,7 +114,7 @@
                 <div class="space-y-1">
                     {% for s in stock_bajo %}
                     <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div class="w-8 h-8 {% if s.cantidad == 0 %}bg-red-50 text-red-600{% else %}bg-amber-50 text-amber-600{% endif %} rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-8 h-8 {% if s.cantidad == 0 %}bg-error-bg text-error-text{% else %}bg-warning-bg text-warning-text{% endif %} rounded-lg flex items-center justify-center flex-shrink-0">
                             <span class="text-xs font-bold">{{ s.cantidad|floatformat:0 }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
@@ -132,7 +132,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <div class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-ink">Reportes y exportación</h3>
         </div>
@@ -201,8 +201,8 @@ function dashboardCharts() {
                     datasets: [{
                         label: 'Stock total',
                         data: data.map(d => d.value),
-                        backgroundColor: ['#0d52eb', '#22c55e', '#f59e0b', '#ef4444',
-'#9d1a41', '#08349e'],
+                        backgroundColor: ['#0B3C95', '#2869c0', '#5387cd', '#7ea5d9',
+'#a9c3e6', '#d4e1f2'],
                         borderRadius: 4,
                     }]
                 },
@@ -225,9 +225,9 @@ function dashboardCharts() {
                 data: {
                     labels: dias.map(d => d.slice(5)),
                     datasets: [
-                        { label: 'Entradas', data: tipos.ENTRADA, borderColor: '#22c55e', tension: 0.3, fill: false },
-                        { label: 'Salidas', data: tipos.SALIDA, borderColor: '#ef4444', tension: 0.3, fill: false },
-                        { label: 'Ajustes', data: tipos.AJUSTE, borderColor: '#f59e0b', tension: 0.3, fill: false },
+                        { label: 'Entradas', data: tipos.ENTRADA, borderColor: '#137333', backgroundColor: '#13733320', tension: 0.3, fill: true },
+                        { label: 'Salidas', data: tipos.SALIDA, borderColor: '#C5221F', backgroundColor: '#C5221F20', tension: 0.3, fill: true },
+                        { label: 'Ajustes', data: tipos.AJUSTE, borderColor: '#B06000', backgroundColor: '#B0600020', tension: 0.3, fill: true },
                     ]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
@@ -242,8 +242,8 @@ function dashboardCharts() {
                     labels: data.map(d => d.label),
                     datasets: [{
                         data: data.map(d => d.value),
-                        backgroundColor: ['#0d52eb', '#22c55e', '#f59e0b', '#ef4444',
-'#9d1a41', '#0a42c4'],
+                        backgroundColor: ['#0B3C95', '#2869c0', '#5387cd', '#7ea5d9',
+'#a9c3e6', '#d4e1f2'],
                     }]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } } }
@@ -253,7 +253,7 @@ function dashboardCharts() {
             const ctx = document.getElementById('chartDistribucion')
             if (!ctx) return
             const labels = { ENTRADA: 'Entradas', SALIDA: 'Salidas', AJUSTE: 'Ajustes' }
-                const colores = { ENTRADA: '#22c55e', SALIDA: '#9d1a41', AJUSTE: '#f59e0b' }
+                const colores = { ENTRADA: '#137333', SALIDA: '#C5221F', AJUSTE: '#B06000' }
             new Chart(ctx, {
                 type: 'bar',
                 data: {

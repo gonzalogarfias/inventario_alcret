@@ -2,7 +2,7 @@
 {% block page_title %}Movimientos{% endblock %}
 {% block page_subtitle %}Historial de entradas, salidas y ajustes{% endblock %}
 {% block content %}
-<div class="bg-white rounded-xl border border-gray-200">
+<div class="bg-white rounded-xl shadow-sm border-0 card-hover">
     <div class="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <form method="get" class="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl">
             <div class="relative flex-1">
@@ -38,7 +38,7 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="bg-gray-50 text-ink-secondary text-xs uppercase tracking-wider">
+                <tr class="bg-primary-50/50 text-ink-secondary text-xs uppercase tracking-wider">
                     <th class="text-left px-5 py-3 font-medium">Tipo</th>
                     <th class="text-left px-5 py-3 font-medium">Producto</th>
                     <th class="text-left px-5 py-3 font-medium">Almacén</th>
@@ -53,9 +53,9 @@
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-5 py-3.5">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {% if m.tipo == 'ENTRADA' %}bg-green-50 text-green-700
-                            {% elif m.tipo == 'SALIDA' %}bg-red-50 text-red-700
-                            {% else %}bg-amber-50 text-amber-700{% endif %}">
+                            {% if m.tipo == 'ENTRADA' %}bg-success-bg text-success-text
+                            {% elif m.tipo == 'SALIDA' %}bg-error-bg text-error-text
+                            {% else %}bg-warning-bg text-warning-text{% endif %}">
                             {{ m.get_tipo_display }}
                         </span>
                     </td>
@@ -64,7 +64,7 @@
                         <span class="text-ink-muted ml-1 font-mono text-xs">{{ m.producto.sku }}</span>
                     </td>
                     <td class="px-5 py-3.5 text-gray-600">{{ m.almacen.nombre }}</td>
-                    <td class="px-5 py-3.5 text-right font-semibold {% if m.tipo == 'ENTRADA' %}text-green-600{% elif m.tipo == 'SALIDA' %}text-red-600{% else %}text-amber-600{% endif %}">
+                    <td class="px-5 py-3.5 text-right font-semibold {% if m.tipo == 'ENTRADA' %}text-success-text{% elif m.tipo == 'SALIDA' %}text-error-text{% else %}text-warning-text{% endif %}">
                         {{ m.cantidad|floatformat:2 }}
                     </td>
                     <td class="px-5 py-3.5 text-right text-gray-600">{% if m.costo_unitario %}${{ m.costo_unitario|floatformat:2 }}{% else %}—{% endif %}</td>

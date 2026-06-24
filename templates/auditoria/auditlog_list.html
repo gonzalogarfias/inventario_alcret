@@ -2,7 +2,7 @@
 {% block page_title %}Auditoría{% endblock %}
 {% block page_subtitle %}Registro inmutable de eventos del sistema{% endblock %}
 {% block content %}
-<div class="bg-white rounded-xl border border-gray-200">
+<div class="bg-white rounded-xl shadow-sm border-0 card-hover">
     <div class="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <form method="get" class="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl">
             <div class="relative flex-1">
@@ -32,7 +32,7 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="bg-gray-50 text-ink-secondary text-xs uppercase tracking-wider">
+                <tr class="bg-primary-50/50 text-ink-secondary text-xs uppercase tracking-wider">
                     <th class="text-left px-5 py-3 font-medium">Evento</th>
                     <th class="text-left px-5 py-3 font-medium">Usuario</th>
                     <th class="text-left px-5 py-3 font-medium">IP</th>
@@ -45,11 +45,11 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-5 py-3">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {% if log.evento == 'ENTRADA' %}bg-green-50 text-green-700
-                            {% elif log.evento == 'SALIDA' %}bg-red-50 text-red-700
-                            {% elif log.evento == 'AJUSTE' %}bg-amber-50 text-amber-700
-                            {% elif log.evento == 'LOGIN_FAIL' %}bg-red-50 text-red-700
-                            {% elif log.evento == 'LOGIN_OK' %}bg-blue-50 text-blue-700
+                            {% if log.evento == 'ENTRADA' %}bg-success-bg text-success-text
+                            {% elif log.evento == 'SALIDA' %}bg-error-bg text-error-text
+                            {% elif log.evento == 'AJUSTE' %}bg-warning-bg text-warning-text
+                            {% elif log.evento == 'LOGIN_FAIL' %}bg-error-bg text-error-text
+                            {% elif log.evento == 'LOGIN_OK' %}bg-info-bg text-info-text
                             {% else %}bg-gray-50 text-gray-700{% endif %}">
                             {{ log.get_evento_display }}
                         </span>

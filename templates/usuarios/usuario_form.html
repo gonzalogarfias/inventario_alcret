@@ -3,7 +3,7 @@
 {% block page_subtitle %}Completá los datos del usuario{% endblock %}
 {% block content %}
 <div class="max-w-xl mx-auto">
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="bg-white rounded-xl shadow-sm border-0 p-6">
         <form method="post" class="space-y-5">
             {% csrf_token %}
             {% for field in form %}
@@ -38,11 +38,11 @@
                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                        {% if not form.instance.pk %}required{% endif %}>
             </div>
-            <div class="flex items-center gap-3 pt-2">
-                <button type="submit" class="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                <button type="submit" class="w-full sm:w-auto px-5 py-2.5 min-h-[44px] bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
                     {% if form.instance.pk %}Guardar cambios{% else %}Crear usuario{% endif %}
                 </button>
-                <a href="{% url 'usuario_list' %}" class="px-5 py-2.5 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100">Cancelar</a>
+                <a href="{% url 'usuario_list' %}" class="w-full sm:w-auto px-5 py-2.5 min-h-[44px] text-center text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 flex items-center justify-center">Cancelar</a>
             </div>
         </form>
     </div>
