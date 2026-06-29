@@ -5,7 +5,7 @@ import dj_database_url  # noqa: F811
 
 DEBUG = False
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*").split(",")
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="").split(",")
+CSRF_TRUSTED_ORIGINS = [o for o in config("CSRF_TRUSTED_ORIGINS", default="").split(",") if o]
 
 SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000
