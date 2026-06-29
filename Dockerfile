@@ -12,7 +12,8 @@ COPY requirements/ ./requirements/
 RUN pip install --no-cache-dir -r requirements/production.txt
 
 COPY . .
-RUN python manage.py collectstatic --noinput --settings=config.settings.production
+RUN DJANGO_SECRET_KEY=build-only \
+    python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Runtime stage
 FROM python:3.13-slim AS runtime
