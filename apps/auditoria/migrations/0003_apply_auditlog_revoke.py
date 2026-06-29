@@ -1,13 +1,12 @@
 from django.db import migrations
-from django.db.utils import ProgrammingError
 
 
 def apply_revoke(apps, schema_editor):
     if schema_editor.connection.vendor == "postgresql":
-        try:
-            schema_editor.execute("REVOKE UPDATE, DELETE ON auditoria_auditlog FROM app_user;")
-        except ProgrammingError:
-            pass
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM pg_roles WHERE rolname='app_user'")
+            if cursor.fetchone():
+                cursor.execute("REVOKE UPDATE, DELETE ON auditoria_auditlog FROM app_user;")
 
 
 class Migration(migrations.Migration):
