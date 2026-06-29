@@ -7,4 +7,4 @@ class AuditoriaConfig(AppConfig):
     label = "auditoria"
 
     def ready(self):
-        import apps.auditoria.signals
+        import apps.auditoria.signals  # noqa: F401

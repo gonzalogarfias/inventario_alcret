@@ -1,6 +1,5 @@
 import pytest
 from django.conf import settings
-from django.contrib.auth.hashers import Argon2PasswordHasher
 
 
 @pytest.mark.django_db

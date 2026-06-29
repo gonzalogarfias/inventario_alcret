@@ -7,4 +7,4 @@ class IntegracionConfig(AppConfig):
     label = "integracion"
 
     def ready(self):
-        import apps.integracion.signals
+        import apps.integracion.signals  # noqa: F401

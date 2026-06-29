@@ -1,3 +1,4 @@
+import csv
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django.http import HttpResponse, StreamingHttpResponse
@@ -53,9 +54,6 @@ def exportar_auditoria_csv(request):
         content_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="auditoria.csv"'},
     )
-
-
-import csv
 
 
 @login_required

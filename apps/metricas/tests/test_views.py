@@ -1,7 +1,7 @@
 import pytest
 import json
 from django.urls import reverse
-from apps.inventario.models import Movimiento, Stock
+from apps.inventario.models import Movimiento
 
 
 @pytest.mark.django_db

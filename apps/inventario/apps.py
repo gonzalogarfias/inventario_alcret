@@ -7,4 +7,4 @@ class InventarioConfig(AppConfig):
     label = "inventario"
 
     def ready(self):
-        import apps.inventario.signals
+        import apps.inventario.signals  # noqa: F401

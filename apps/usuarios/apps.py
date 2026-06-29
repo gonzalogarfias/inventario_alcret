@@ -7,4 +7,4 @@ class UsuariosConfig(AppConfig):
     label = "usuarios"
 
     def ready(self):
-        import apps.usuarios.signals
+        import apps.usuarios.signals  # noqa: F401

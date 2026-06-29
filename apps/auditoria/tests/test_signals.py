@@ -15,13 +15,13 @@ class TestLoginSignals:
             rol=Usuario.Rol.VENDEDOR, password="Pass123!",
         )
         client = Client()
-        response = client.post(reverse("login"), {"username": "login_ok@test.com", "password": "Pass123!"}, follow=True)
+        client.post(reverse("login"), {"username": "login_ok@test.com", "password": "Pass123!"}, follow=True)
         logs = AuditLog.objects.filter(evento=AuditLog.Evento.LOGIN_OK)
         assert logs.count() >= 1
 
     def test_login_fallido_crea_auditlog(self):
         client = Client()
-        response = client.post(reverse("login"), {"username": "noexiste@test.com", "password": "wrong"})
+        client.post(reverse("login"), {"username": "noexiste@test.com", "password": "wrong"})
         logs = AuditLog.objects.filter(evento=AuditLog.Evento.LOGIN_FAIL)
         assert logs.count() >= 1
 

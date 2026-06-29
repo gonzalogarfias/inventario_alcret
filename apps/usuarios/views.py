@@ -2,8 +2,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.views.generic import ListView, CreateView, UpdateView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.shortcuts import render
-from django.db.models import Count, Sum
+from django.db.models import Count
 from django.utils import timezone
 from apps.shared.middleware import get_current_request_ip
 from apps.auditoria.models import AuditLog

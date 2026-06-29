@@ -1,6 +1,4 @@
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from django.contrib.auth.signals import user_logged_in, user_login_failed
-from django.dispatch import receiver
 from apps.shared.middleware import get_current_request_ip
 from .models import AuditLog
 

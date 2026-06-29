@@ -1,11 +1,14 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+import csv
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, StreamingHttpResponse
 from django.db.models import Sum, F, Value
 from django.db.models.functions import Coalesce
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 from .models import Producto, Categoria, Almacen, Movimiento, Stock
 
 
@@ -212,12 +215,6 @@ class MovimientoCreateView(LoginRequiredMixin, CreateView):
 
 
 movimiento_create = MovimientoCreateView.as_view()
-
-
-import csv
-from django.http import HttpResponse, StreamingHttpResponse
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
 
 
 class Echo:

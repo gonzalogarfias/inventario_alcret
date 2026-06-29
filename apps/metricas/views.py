@@ -4,7 +4,7 @@ from django.db.models import Count, Sum, F
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from datetime import timedelta
-from apps.inventario.models import Producto, Movimiento, Stock, Categoria, Almacen
+from apps.inventario.models import Movimiento
 
 
 @login_required
