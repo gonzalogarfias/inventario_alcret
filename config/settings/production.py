@@ -1,4 +1,5 @@
-from .base import *  # noqa: F403, F405
+# ruff: noqa: F405
+from .base import *  # noqa: F403
 
 DEBUG = False
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
