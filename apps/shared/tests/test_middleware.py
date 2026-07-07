@@ -1,4 +1,6 @@
 import pytest
+from django.http import HttpResponse
+from django.utils import timezone
 
 from apps.shared.middleware import (
     SecurityHeadersMiddleware,
@@ -8,34 +10,37 @@ from apps.shared.middleware import (
 
 
 class TestSecurityHeadersMiddleware:
+    def response(self):
+        return HttpResponse()
+
     def test_csp_header_present(self, rf):
         request = rf.get("/")
-        middleware = SecurityHeadersMiddleware(lambda r: type("Resp", (), {})())
-        response = middleware.process_response(request, type("Resp", (), {"headers": {}}))
+        middleware = SecurityHeadersMiddleware(lambda r: HttpResponse())
+        response = middleware.process_response(request, self.response())
         assert "Content-Security-Policy" in response
 
     def test_x_content_type_options(self, rf):
         request = rf.get("/")
-        middleware = SecurityHeadersMiddleware(lambda r: type("Resp", (), {})())
-        response = middleware.process_response(request, type("Resp", (), {"headers": {}}))
+        middleware = SecurityHeadersMiddleware(lambda r: HttpResponse())
+        response = middleware.process_response(request, self.response())
         assert response.get("X-Content-Type-Options") == "nosniff"
 
     def test_x_frame_options(self, rf):
         request = rf.get("/")
-        middleware = SecurityHeadersMiddleware(lambda r: type("Resp", (), {})())
-        response = middleware.process_response(request, type("Resp", (), {"headers": {}}))
+        middleware = SecurityHeadersMiddleware(lambda r: HttpResponse())
+        response = middleware.process_response(request, self.response())
         assert response.get("X-Frame-Options") == "DENY"
 
     def test_referrer_policy(self, rf):
         request = rf.get("/")
-        middleware = SecurityHeadersMiddleware(lambda r: type("Resp", (), {})())
-        response = middleware.process_response(request, type("Resp", (), {"headers": {}}))
+        middleware = SecurityHeadersMiddleware(lambda r: HttpResponse())
+        response = middleware.process_response(request, self.response())
         assert response.get("Referrer-Policy") == "strict-origin-when-cross-origin"
 
     def test_permissions_policy(self, rf):
         request = rf.get("/")
-        middleware = SecurityHeadersMiddleware(lambda r: type("Resp", (), {})())
-        response = middleware.process_response(request, type("Resp", (), {"headers": {}}))
+        middleware = SecurityHeadersMiddleware(lambda r: HttpResponse())
+        response = middleware.process_response(request, self.response())
         assert response.get("Permissions-Policy") == "camera=(), microphone=(), geolocation=()"
 
 
@@ -49,7 +54,7 @@ class TestGetCurrentRequestIp:
         CurrentRequestMiddleware(lambda r: None).process_request(request)
         ip = get_current_request_ip()
         assert ip == "10.0.0.1"
-        CurrentRequestMiddleware(lambda r: None).process_response(request, type("Resp", (), {})())
+        CurrentRequestMiddleware(lambda r: None).process_response(request, HttpResponse())
 
     def test_remoto_addr(self, rf):
         request = rf.get("/", REMOTE_ADDR="192.168.1.1")
@@ -57,16 +62,13 @@ class TestGetCurrentRequestIp:
         CurrentRequestMiddleware(lambda r: None).process_request(request)
         ip = get_current_request_ip()
         assert ip == "192.168.1.1"
-        CurrentRequestMiddleware(lambda r: None).process_response(request, type("Resp", (), {})())
+        CurrentRequestMiddleware(lambda r: None).process_response(request, HttpResponse())
 
 
 @pytest.mark.django_db
 class TestInvalidarSesionesUsuario:
     def test_invalida_sesion_del_usuario(self, client, usuario_admin):
         client.force_login(usuario_admin)
-        from django.contrib.sessions.models import Session
-        assert Session.objects.filter(expire_date__gte=Session.objects.model._meta.get_field("expire_date").default()).count() >= 0
-        # Solo verificamos que no explote
         invalidar_sesiones_usuario(usuario_admin.pk)
         assert True
 
