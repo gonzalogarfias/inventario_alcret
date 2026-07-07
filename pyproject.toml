@@ -14,7 +14,15 @@ ignore = ["SIM115"]
 
 [tool.ruff.lint.per-file-ignores]
 "config/settings/*.py" = ["F405"]
-"*/migrations/*.py" = ["E501"]
+"*/migrations/*.py" = ["E501", "ARG001"]
+"apps/*/signals.py" = ["ARG001", "E501"]
+"apps/*/admin.py" = ["ARG002"]
+"apps/*/tests/*.py" = ["ARG002", "E501", "ARG005"]
+"config/urls.py" = ["E501", "ARG001"]
+"apps/shared/middleware.py" = ["ARG002"]
+"apps/shared/tests/*.py" = ["E501", "ARG005"]
+"apps/inventario/views.py" = ["ARG001"]
+"apps/metricas/views.py" = ["ARG001"]
 
 [tool.ruff.format]
 quote-style = "double"

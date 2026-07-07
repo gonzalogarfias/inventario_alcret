@@ -98,7 +98,11 @@ class ProductoDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["stocks"] = Stock.objects.filter(producto=self.object).select_related("almacen")
-        ctx["movimientos"] = Movimiento.objects.filter(producto=self.object).select_related("almacen", "realizada_por").order_by("-created_at")[:20]
+        ctx["movimientos"] = (
+            Movimiento.objects.filter(producto=self.object)
+            .select_related("almacen", "realizada_por")
+            .order_by("-created_at")[:20]
+        )
         return ctx
 
 
@@ -226,7 +230,8 @@ class MovimientoCreateView(LoginRequiredMixin, CreateView):
         if tipo == Movimiento.Tipo.AJUSTE and not self.request.user.has_perm("usuarios.puede_ajustar_stock"):
             messages.error(self.request, "No tenés permiso para realizar ajustes de stock.")
             return False
-        if tipo == Movimiento.Tipo.ENTRADA and self.request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+        roles_permitidos_entrada = (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA)
+        if tipo == Movimiento.Tipo.ENTRADA and self.request.user.rol not in roles_permitidos_entrada:
             messages.error(self.request, "No tenés permiso para registrar entradas de stock.")
             return False
         return True
@@ -309,7 +314,11 @@ def exportar_movimientos_csv(request):
     writer = csv.writer(pseudo_buffer)
     writer.writerow(["Tipo", "Producto", "SKU", "Almacén", "Cantidad", "Costo Unitario", "Realizado Por", "Fecha"])
     for m in qs:
-        writer.writerow([m.tipo, m.producto.nombre, m.producto.sku, m.almacen.nombre, str(m.cantidad), str(m.costo_unitario or ""), str(m.realizada_por or ""), str(m.created_at)])
+        writer.writerow([
+            m.tipo, m.producto.nombre, m.producto.sku, m.almacen.nombre,
+            str(m.cantidad), str(m.costo_unitario or ""),
+            str(m.realizada_por or ""), str(m.created_at),
+        ])
     return StreamingHttpResponse(
         (pseudo_buffer.write for _ in range(1)),
         content_type="text/csv",
@@ -329,7 +338,12 @@ def exportar_movimientos_excel(request):
     if tipo:
         qs = qs.filter(tipo=tipo)
     for m in qs:
-        ws.append([m.tipo, m.producto.nombre, m.producto.sku, m.almacen.nombre, float(m.cantidad), float(m.costo_unitario) if m.costo_unitario else "", str(m.realizada_por or ""), str(m.created_at)])
+        ws.append([
+            m.tipo, m.producto.nombre, m.producto.sku, m.almacen.nombre,
+            float(m.cantidad),
+            float(m.costo_unitario) if m.costo_unitario else "",
+            str(m.realizada_por or ""), str(m.created_at),
+        ])
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = 'attachment; filename="movimientos.xlsx"'
     wb.save(response)

@@ -88,7 +88,9 @@ class Movimiento(models.Model):
     cantidad = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.001"))])
     costo_unitario = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     motivo = models.TextField(blank=True)
-    realizada_por = models.ForeignKey("usuarios.Usuario", on_delete=models.SET_NULL, null=True, related_name="movimientos")
+    realizada_por = models.ForeignKey(
+        "usuarios.Usuario", on_delete=models.SET_NULL, null=True, related_name="movimientos"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
