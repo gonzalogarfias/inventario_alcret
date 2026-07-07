@@ -2,9 +2,11 @@ import hashlib
 import hmac
 import json
 import logging
+from datetime import timedelta
+
 from celery import shared_task
 from django.conf import settings
-
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +58,23 @@ def enviar_evento_crm(self, evento, payload):
 
     sync_log.intentos = self.request.retries + 1
     sync_log.save()
+
+
+@shared_task
+def verificar_expiracion_claves():
+    from .models import ClaveCRM
+    umbral = timezone.now() + timedelta(days=7)
+    proximas = ClaveCRM.objects.filter(
+        activa=True, expira_en__lte=umbral, expira_en__gt=timezone.now()
+    )
+    for clave in proximas:
+        logger.warning(
+            "Clave CRM %s expira el %s (dentro de 7 días)",
+            clave.clave_publica, clave.expira_en,
+        )
+    vencidas = ClaveCRM.objects.filter(activa=True, expira_en__lte=timezone.now())
+    for clave in vencidas:
+        logger.error("Clave CRM %s EXPIRADA el %s", clave.clave_publica, clave.expira_en)
+        clave.activa = False
+        clave.rotada_en = timezone.now()
+        clave.save()

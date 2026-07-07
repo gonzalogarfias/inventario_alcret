@@ -1,7 +1,9 @@
-import pytest
 from decimal import Decimal
-from apps.inventario.models import Movimiento, Stock
+
+import pytest
+
 from apps.auditoria.models import AuditLog
+from apps.inventario.models import Movimiento, Stock
 
 
 @pytest.mark.django_db

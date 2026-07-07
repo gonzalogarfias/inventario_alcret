@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import WebhookCRM, SyncLog
+
+from .models import SyncLog, WebhookCRM
 
 
 @admin.register(WebhookCRM)

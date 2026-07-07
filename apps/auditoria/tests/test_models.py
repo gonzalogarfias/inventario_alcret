@@ -1,4 +1,5 @@
 import pytest
+
 from apps.auditoria.models import AuditLog
 
 

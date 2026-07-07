@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+
 from apps.usuarios.models import Usuario
 
 

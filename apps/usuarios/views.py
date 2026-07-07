@@ -1,13 +1,16 @@
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
-from django.views.generic import ListView, CreateView, UpdateView, TemplateView
-from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
+from django.urls import reverse_lazy
 from django.utils import timezone
-from apps.shared.middleware import get_current_request_ip
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+
+from apps.alertas.models import Alerta
 from apps.auditoria.models import AuditLog
+from apps.inventario.models import Almacen, Movimiento, Producto, Stock
+from apps.shared.middleware import get_current_request_ip, invalidar_sesiones_usuario
+
 from .models import Usuario
-from apps.inventario.models import Producto, Movimiento, Almacen, Stock
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -19,8 +22,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ctx["total_almacenes"] = Almacen.objects.filter(activo=True).count()
         ctx["total_usuarios"] = Usuario.objects.filter(activo=True).count()
         ctx["total_movimientos_hoy"] = Movimiento.objects.filter(created_at__date=timezone.now().date()).count()
+        ctx["total_alertas"] = Alerta.objects.filter(estado="PENDIENTE").count()
         ctx["stock_bajo"] = Stock.objects.filter(cantidad__lte=5).select_related("producto", "almacen")[:10]
-        ctx["ultimos_movimientos"] = Movimiento.objects.select_related("producto", "almacen", "realizada_por").order_by("-created_at")[:10]
+        ctx["ultimos_movimientos"] = (
+            Movimiento.objects.select_related("producto", "almacen", "realizada_por")
+            .order_by("-created_at")[:10]
+        )
         ctx["productos_por_categoria"] = (
             Producto.objects.filter(activo=True)
             .values("categoria__nombre")
@@ -60,8 +67,10 @@ class UsuarioCreateView(PermissionRequiredMixin, CreateView):
 
     def form_valid(self, form):
         password = self.request.POST.get("password")
-        if password:
-            form.instance.set_password(password)
+        if not password:
+            form.add_error("email", "La contraseña es obligatoria.")
+            return self.form_invalid(form)
+        form.instance.set_password(password)
         messages.success(self.request, "Usuario creado correctamente.")
         return super().form_valid(form)
 
@@ -91,6 +100,7 @@ class UsuarioUpdateView(PermissionRequiredMixin, UpdateView):
                 hash_previo="",
             )
         if password:
+            invalidar_sesiones_usuario(form.instance.id)
             AuditLog.objects.create(
                 evento=AuditLog.Evento.PASSWORD_CHANGED,
                 usuario=form.instance,

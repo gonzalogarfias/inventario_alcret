@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Alertas de stock{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold mb-4">Alertas de stock</h1>
+  {% if alertas %}
+    <div class="space-y-3">
+      {% for alerta in alertas %}
+        <div class="p-4 rounded-lg border {% if alerta.estado == 'PENDIENTE' %}bg-yellow-50 border-yellow-300{% elif alerta.estado == 'VISTA' %}bg-blue-50 border-blue-300{% else %}bg-green-50 border-green-300{% endif %}">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-900">{{ alerta.mensaje }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ alerta.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-1 rounded-full
+                {% if alerta.estado == 'PENDIENTE' %}bg-yellow-100 text-yellow-800
+                {% elif alerta.estado == 'VISTA' %}bg-blue-100 text-blue-800
+                {% else %}bg-green-100 text-green-800{% endif %}">
+                {{ alerta.get_estado_display }}
+              </span>
+              {% if alerta.estado != 'RESUELTA' %}
+                <a href="{% url 'alerta_resolve' alerta.pk %}"
+                   class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                  Resolver
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-center py-8">No hay alertas pendientes.</p>
+  {% endif %}
+</div>
+{% endblock %}

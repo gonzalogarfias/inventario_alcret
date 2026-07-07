@@ -1,7 +1,8 @@
 import pytest
-from django.test import Client
 from django.contrib.auth import get_user_model
+from django.test import Client
 from django.urls import reverse
+
 from apps.auditoria.models import AuditLog
 
 Usuario = get_user_model()

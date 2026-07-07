@@ -1,8 +1,10 @@
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth.hashers import Argon2PasswordHasher
 from django.db.utils import IntegrityError
 from django.utils import timezone
-from datetime import timedelta
+
 from apps.usuarios.models import Usuario
 
 

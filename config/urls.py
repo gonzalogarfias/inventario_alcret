@@ -1,10 +1,12 @@
 from pathlib import Path
+
 from django.contrib import admin
-from django.http import FileResponse, JsonResponse
-from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from django.http import FileResponse, JsonResponse
+from django.urls import include, path
 from django.views.decorators.cache import cache_control
-from apps.auditoria.auth_views import AuditPasswordResetView, AuditPasswordResetConfirmView
+
+from apps.auditoria.auth_views import AuditPasswordResetConfirmView, AuditPasswordResetView
 
 
 def health_check(request):
@@ -30,4 +32,5 @@ urlpatterns = [
     path("", include("apps.inventario.urls")),
     path("", include("apps.auditoria.urls")),
     path("", include("apps.metricas.urls")),
+    path("alertas/", include("apps.alertas.urls")),
 ]

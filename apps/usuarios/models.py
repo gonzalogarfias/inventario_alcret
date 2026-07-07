@@ -1,10 +1,14 @@
 import uuid
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from typing import Any, Optional
+
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
 
-class UsuarioManager(BaseUserManager):
-    def create_user(self, email, nombre, rol, password=None, **extra_fields):
+class UsuarioManager(BaseUserManager["Usuario"]):
+    def create_user(
+        self, email: str, nombre: str, rol: str, password: Optional[str] = None, **extra_fields: Any
+    ) -> "Usuario":
         if not email:
             raise ValueError("El email es obligatorio")
         email = self.normalize_email(email)
@@ -13,7 +17,7 @@ class UsuarioManager(BaseUserManager):
         usuario.save(using=self._db)
         return usuario
 
-    def create_superuser(self, email, nombre, password=None):
+    def create_superuser(self, email: str, nombre: str, password: Optional[str] = None) -> "Usuario":
         return self.create_user(
             email=email,
             nombre=nombre,
@@ -25,6 +29,11 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
+    """Modelo de usuario personalizado con login por email y roles RBAC.
+
+    Implementa la matriz de permisos definida en ARQUITECTURA.md.
+    """
+
     class Rol(models.TextChoices):
         ADMINISTRADOR = "ADMIN", "Administrador"
         VENDEDOR = "VENDEDOR", "Vendedor"
@@ -56,10 +65,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             ("puede_configurar_crm", "Puede configurar integración CRM"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.nombre} <{self.email}>"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if self.pk and Usuario.objects.filter(pk=self.pk).exists():
             original = Usuario.objects.get(pk=self.pk)
             if original.bloqueado_hasta != self.bloqueado_hasta:
@@ -67,8 +76,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
 
     @property
-    def esta_bloqueado(self):
+    def esta_bloqueado(self) -> bool:
         from django.utils import timezone
-        if self.bloqueado_hasta and self.bloqueado_hasta > timezone.now():
-            return True
-        return False
+        return bool(self.bloqueado_hasta and self.bloqueado_hasta > timezone.now())

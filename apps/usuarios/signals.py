@@ -1,6 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from apps.shared.middleware import get_current_request_ip
+
 from .models import Usuario
 
 

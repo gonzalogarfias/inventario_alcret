@@ -1,8 +1,10 @@
-import pytest
 from decimal import Decimal
-from django.db.utils import IntegrityError
+
+import pytest
 from django.core.exceptions import ValidationError
-from apps.inventario.models import Categoria, Producto, Almacen, Stock, Movimiento
+from django.db.utils import IntegrityError
+
+from apps.inventario.models import Almacen, Categoria, Movimiento, Producto, Stock
 
 
 @pytest.mark.django_db

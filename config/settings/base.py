@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     "apps.auditoria",
     "apps.metricas",
     "apps.integracion",
+    "apps.alertas",
 ]
 
 MIDDLEWARE = [
@@ -38,6 +40,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
+    "apps.shared.middleware.SecurityHeadersMiddleware",
     "apps.shared.middleware.CurrentRequestMiddleware",
 ]
 
@@ -147,6 +150,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "America/Argentina/Buenos_Aires"
+CELERY_BEAT_SCHEDULE = {
+    "verificar-expiracion-claves-crm": {
+        "task": "apps.integracion.tasks.verificar_expiracion_claves",
+        "schedule": 86400,  # cada 24 horas
+    },
+}
 
 LOGGING = {
     "version": 1,

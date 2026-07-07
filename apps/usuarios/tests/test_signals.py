@@ -1,6 +1,7 @@
 import pytest
-from apps.usuarios.models import Usuario
+
 from apps.auditoria.models import AuditLog
+from apps.usuarios.models import Usuario
 
 
 @pytest.mark.django_db

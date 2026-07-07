@@ -1,7 +1,9 @@
-import pytest
 from decimal import Decimal
+
+import pytest
 from django.urls import reverse
-from apps.inventario.models import Producto, Categoria, Almacen, Movimiento
+
+from apps.inventario.models import Almacen, Categoria, Movimiento, Producto
 
 
 @pytest.mark.django_db

@@ -45,6 +45,15 @@
             Almacenes
         </a>
         <div class="pt-3 mt-3 border-t border-white/10">
+            <p class="px-3 pb-1 text-[11px] font-semibold text-white/30 uppercase tracking-wider">Alertas</p>
+            <a href="{% url 'alerta_list' %}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+               :class="active.startsWith('alerta') ? 'bg-primary-600 text-white shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white'">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                Alertas
+            </a>
+        </div>
+        <div class="pt-3 mt-3 border-t border-white/10">
             <p class="px-3 pb-1 text-[11px] font-semibold text-white/30 uppercase tracking-wider">Administración</p>
             <a href="{% url 'usuario_list' %}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"

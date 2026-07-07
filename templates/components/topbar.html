@@ -7,13 +7,14 @@
         </button>
         <div x-data="{ active: '{{ request.resolver_match.url_name }}' }">
             <span class="text-sm font-semibold text-primary-600 uppercase tracking-wider"
-                  x-text="active.startsWith('producto') ? 'Productos' :
-                           active.startsWith('movimiento') ? 'Movimientos' :
-                           active.startsWith('categoria') ? 'Categorías' :
-                           active.startsWith('almacen') ? 'Almacenes' :
-                           active.startsWith('usuario') ? 'Usuarios' :
-                           active.startsWith('auditlog') ? 'Auditoría' :
-                           'Dashboard'"></span>
+                   x-text="active.startsWith('producto') ? 'Productos' :
+                            active.startsWith('movimiento') ? 'Movimientos' :
+                            active.startsWith('categoria') ? 'Categorías' :
+                            active.startsWith('almacen') ? 'Almacenes' :
+                            active.startsWith('alerta') ? 'Alertas' :
+                            active.startsWith('usuario') ? 'Usuarios' :
+                            active.startsWith('auditlog') ? 'Auditoría' :
+                            'Dashboard'"></span>
             <p class="text-xs text-ink-secondary mt-0.5">{% block page_subtitle %}Resumen del inventario{% endblock %}</p>
         </div>
     </div>

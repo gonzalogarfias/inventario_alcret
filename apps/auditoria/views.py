@@ -1,18 +1,21 @@
 import csv
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse, StreamingHttpResponse
-from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
+
 from .models import AuditLog
 
 
-class AuditLogListView(LoginRequiredMixin, ListView):
+class AuditLogListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = AuditLog
     template_name = "auditoria/auditlog_list.html"
     context_object_name = "logs"
     paginate_by = 30
+    permission_required = "usuarios.puede_ver_auditoria_completa"
 
     def get_queryset(self):
         qs = AuditLog.objects.select_related("usuario").order_by("-timestamp")
@@ -39,6 +42,7 @@ class Echo:
 
 
 @login_required
+@permission_required("usuarios.puede_ver_auditoria_completa", raise_exception=True)
 def exportar_auditoria_csv(request):
     qs = AuditLog.objects.select_related("usuario").order_by("-timestamp")
     evento = request.GET.get("evento")
@@ -57,6 +61,7 @@ def exportar_auditoria_csv(request):
 
 
 @login_required
+@permission_required("usuarios.puede_ver_auditoria_completa", raise_exception=True)
 def exportar_auditoria_excel(request):
     wb = Workbook()
     ws = wb.active

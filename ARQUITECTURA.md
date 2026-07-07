@@ -16,6 +16,7 @@ Este archivo define el esqueleto técnico del proyecto. Ningún agente debe modi
 |---|---|---|
 | Backend | Django 4.2+ (LTS) | ORM, auth, permisos, admin nativos. Sin REST frameworks externos salvo DRF para la integración con CRM |
 | Frontend | Alpine.js 3.x | Reactividad declarativa en templates Django. Sin SPA, sin build step |
+| Tooling | Ruff + isort + pytest | Configuración unificada en pyproject.toml |
 | Base de datos | PostgreSQL 15+ | Transacciones ACID obligatorias para movimientos de inventario |
 | Caché / cola | Redis + Celery | Tareas asíncronas (correos, sync CRM, reportes) |
 | Estilos | Tailwind CSS (CDN play) | Sin proceso de build en desarrollo. En producción: CLI de Tailwind |
@@ -79,7 +80,9 @@ proyecto/
 │   ├── inventario/          # Productos, entradas, salidas, ajustes
 │   ├── auditoria/           # AuditLog inmutable, señales
 │   ├── metricas/            # KPIs, dashboards, reportes
-│   └── integracion/         # Webhooks CRM, cola de sync
+│   ├── integracion/         # Webhooks CRM, cola de sync, rotación de claves
+│   ├── alertas/             # Alertas de stock bajo, configuración de umbrales
+│   └── shared/              # Middleware, servicios compartidos, value objects
 │
 ├── templates/               # Templates Django globales
 │   ├── base.html            # Layout principal con Alpine.js
@@ -94,6 +97,7 @@ proyecto/
 │   ├── development.txt
 │   └── production.txt
 │
+├── pyproject.toml           # Configuración de Ruff, isort, pytest
 └── ARQUITECTURA.md          # Este archivo — fuente de verdad
 ```
 
@@ -143,19 +147,21 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 ### Controles implementados y su ubicación en código
 
 | Control NIST | Descripción | Dónde se implementa |
-|---|---|---|
+|---|---|---|---|
 | `AC-2` | Gestión de cuentas | `apps/usuarios/` — ciclo de vida completo |
+| `AC-3` | Enforcement de acceso | `_check_movimiento_permission` en `apps/inventario/views.py` + `PermissionRequiredMixin` + `@permission_required` en vistas de usuario y exportaciones |
 | `AC-7` | Bloqueo por intentos fallidos | `django-axes` + campo `bloqueado_hasta` en Usuario |
-| `AC-12` | Terminación de sesión | `django.contrib.sessions` + invalidar al cambiar contraseña |
+| `AC-12` | Terminación de sesión | `django.contrib.sessions` + `invalidar_sesiones_usuario()` al cambiar password (vista admin `UsuarioUpdateView` y `AuditPasswordResetConfirmView`) |
 | `AU-2` | Eventos auditables | `apps/auditoria/` — lista de eventos definida abajo |
-| `AU-9` | Protección del audit log | Tabla PostgreSQL con solo INSERT (sin UPDATE/DELETE) |
-| `AU-12` | Generación de registros | Señales Django en cada operación de inventario |
-| `IA-2` | Identificación y autenticación | Login por email + MFA opcional para admin |
-| `IA-5(1)` | Política de contraseñas | `AUTH_PASSWORD_VALIDATORS` + `django-pwned-passwords` |
+| `AU-9` | Protección del audit log | Tabla PostgreSQL con solo INSERT (sin UPDATE/DELETE) + `PermissionError` en ORM |
+| `AU-12` | Generación de registros | Señales Django en cada operación de inventario + auditoría de login fallidos |
+| `IA-2` | Identificación y autenticación | Login por email + `AuditPasswordResetForm` que valida `activo=True` |
+| `IA-5(1)` | Política de contraseñas | `AUTH_PASSWORD_VALIDATORS` + `django-pwned-passwords` + mínimo 12 caracteres |
 | `SC-8` | Confidencialidad en tránsito | TLS 1.2+ obligatorio, `EMAIL_USE_TLS = True` |
 | `SC-13` | Criptografía aprobada | `Argon2` para hashes, `secrets` para tokens, AES-256 en reposo |
-| `SC-23` | Autenticidad de sesión | `SESSION_COOKIE_HTTPONLY`, `SESSION_COOKIE_SECURE`, rotación de keys |
-| `SI-10` | Validación de entradas | Validadores Django en todos los serializers y forms |
+| `SC-23` | Autenticidad de sesión | `SESSION_COOKIE_HTTPONLY`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE=Strict`, cierre al cerrar navegador |
+| `SC-23(1)` | Content Security Policy | `SecurityHeadersMiddleware` en `apps/shared/middleware.py` — CSP permite CDNs (cdn.jsdelivr.net, tailwindcss.com, unpkg.com, fonts.googleapis.com, fonts.gstatic.com), `'unsafe-inline'` y `'unsafe-eval'` para Alpine.js, `frame-ancestors 'none'`, `base-uri 'self'` |
+| `SI-10` | Validación de entradas | Validadores Django en todos los serializers y forms + `csrf_middleware` presente + `SECURE_CONTENT_TYPE_NOSNIFF` |
 
 ### Configuración de seguridad base — settings/base.py
 
@@ -190,26 +196,95 @@ AXES_COOLOFF_TIME        = 1   # hora
 AXES_LOCKOUT_PARAMETERS  = ["ip_address", "username"]
 ```
 
+### Middleware de seguridad — apps/shared/middleware.py
+
+```python
+class SecurityHeadersMiddleware:
+    """Agrega headers de seguridad a toda respuesta HTTP.
+
+    - Content-Security-Policy: restringe fuentes de scripts, estilos e imágenes
+    - X-Content-Type-Options: previene MIME sniffing
+    - X-Frame-Options: previene clickjacking
+    - Referrer-Policy: control de referencias
+    - Permissions-Policy: restringe APIs del navegador
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        response["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://fonts.googleapis.com; "
+            "img-src 'self' data:; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' https://cdn.jsdelivr.net; "
+            "form-action 'self'; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self';"
+        )
+        response["X-Content-Type-Options"] = "nosniff"
+        response["X-Frame-Options"] = "DENY"
+        response["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        return response
+```
+
+### Invalidación de sesiones — apps/shared/middleware.py
+
+```python
+def invalidar_sesiones_usuario(user_id):
+    """Borra todas las sesiones activas de un usuario (NIST AC-12).
+
+    Se llama desde:
+      - UsuarioUpdateView   (admin cambia password de otro usuario)
+      - AuditPasswordResetConfirmView (usuario completa reset de password)
+    """
+    from django.contrib.sessions.models import Session
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    sessions = Session.objects.filter(
+        expire_date__gte=timezone.now()
+    ).prefetch_related("session_key")
+    for session in sessions:
+        data = session.get_decoded()
+        if str(data.get("_auth_user_id")) == str(user_id):
+            session.delete()
+```
+
+### Registro en MIDDLEWARE — config/settings/base.py
+
+```python
+MIDDLEWARE = [
+    # ... Django built-in middlewares ...
+    "apps.shared.middleware.SecurityHeadersMiddleware",  # CSP y otros headers
+]
+```
+
 ---
 
 ## Flujo de recuperación de contraseña
 
-El flujo usa el `PasswordResetTokenGenerator` nativo de Django con las siguientes reglas estrictas:
+El flujo usa vistas personalizadas en `apps/auditoria/auth_views.py` que extienden las nativas de Django:
+
+| Vista nativa | Vista personalizada | Cambio clave |
+|---|---|---|
+| `PasswordResetForm` | `AuditPasswordResetForm` | Usa `activo=True` en lugar de `is_active` (modelo personalizado sin ese campo). Crea `AuditLog.PASSWORD_RESET` al enviar el correo. |
+| `PasswordResetConfirmView` | `AuditPasswordResetConfirmView` | Llama a `invalidar_sesiones_usuario()` **antes** de cambiar la contraseña. Crea `AuditLog.PASSWORD_RESET` al completar. |
+
+Reglas del flujo:
 
 1. **Respuesta genérica siempre** — el sistema nunca confirma si el correo existe (`SC-8`, prevención de user enumeration)
 2. **Token de un solo uso** — al usarse o al cambiar la contraseña, queda inválido automáticamente
 3. **Expiración de 15 minutos** — `PASSWORD_RESET_TIMEOUT = 900`
 4. **Correo cifrado** — SMTP con TLS, nunca port 25 sin cifrado
-5. **Invalidar sesiones activas** — al confirmar el cambio, limpiar todas las sesiones del usuario
+5. **Invalidar sesiones activas** — al confirmar el cambio, limpiar todas las sesiones del usuario vía `invalidar_sesiones_usuario()` ✅ Implementado
 6. **Notificación de cambio** — enviar correo de confirmación al usuario (detección de compromiso, `AC-2`)
-7. **Registrar en audit log** — evento `PASSWORD_RESET_REQUESTED` y `PASSWORD_RESET_COMPLETED` con IP y timestamp
-
-```python
-# Señales que deben dispararse (apps/auditoria/signals.py)
-# password_reset_requested  → IP, email, timestamp
-# password_reset_completed  → IP, usuario_id, timestamp
-# password_changed_by_admin → admin_id, usuario_id, timestamp
-```
+7. **Registrar en audit log** — evento `PASSWORD_RESET_REQUESTED` y `PASSWORD_RESET_COMPLETED` con IP y timestamp ✅ Implementado
 
 ---
 
@@ -266,6 +341,23 @@ REVOKE UPDATE, DELETE ON auditoria_auditlog FROM app_user;
 - **Dirección:** Bidireccional con webhooks
 - **Entrega garantizada:** Cola Celery con reintento exponencial (3 intentos, backoff 60s/300s/900s)
 
+### Rotación de claves HMAC
+
+El modelo `ClaveCRM` en `apps/integracion/models.py` gestiona el ciclo de vida de las claves HMAC:
+
+| Campo | Tipo | Propósito |
+|---|---|---|
+| `clave_publica` | `CharField(unique=True)` | Identificador público de la clave |
+| `hash_clave` | `CharField(max_length=128)` | SHA-256 del secreto (nunca se almacena el secreto en texto plano) |
+| `activa` | `BooleanField(default=True)` | Clave en uso actualmente |
+| `expira_en` | `DateTimeField` | Fecha de expiración |
+
+**Regla:** Al crear una nueva clave activa, las anteriores se desactivan automáticamente. La rotación se registra en el AuditLog.
+
+**Comando de gestión:** `python manage.py rotar_clave_crm --dias-expiracion 90`
+
+**Tarea programada:** `verificar_expiracion_claves` (Celery Beat, cada 24h) desactiva claves vencidas y alerta sobre claves próximas a expirar.
+
 ### Eventos que el inventario publica al CRM
 
 | Evento | Cuándo | Datos enviados |
@@ -280,6 +372,50 @@ REVOKE UPDATE, DELETE ON auditoria_auditlog FROM app_user;
 |---|---|---|
 | `orden.confirmada` | Orden aprobada en CRM | Crear salida automática |
 | `orden.cancelada` | Orden cancelada | Revertir reserva de stock |
+
+---
+
+---
+
+## Módulo de alertas — apps/alertas
+
+### Modelos
+
+| Modelo | Propósito |
+|---|---|
+| `AlertaConfig` | Configuración de umbrales por producto (opcional, usa `stock_minimo` por defecto) |
+| `Alerta` | Instancia de alerta generada (stock bajo), con estados PENDIENTE / VISTA / RESUELTA |
+
+### Flujo
+
+1. `Movimiento.post_save` → `verificar_stock_bajo()` compara stock total vs `stock_minimo`
+2. Si el stock está por debajo del umbral, crea un registro `Alerta` con estado `PENDIENTE`
+3. El usuario puede ver las alertas en `/alertas/` y marcarlas como resueltas
+
+---
+
+## Value Objects — apps/shared/value_objects.py
+
+Objetos valor inmutables para conceptos de dominio:
+
+| Objeto | Validación |
+|---|---|
+| `PrecioVenta` | Decimal positivo, máximo 999,999,999.99 |
+| `CantidadStock` | Entero no negativo |
+| `SKU` | Patrón `^[A-Z0-9]{3,20}(-[A-Z0-9]{1,10})?$` |
+| `EmailAddress` | Validación de formato email |
+
+---
+
+## Service Layer
+
+Cada app de negocio expone servicios en `services.py` que encapsulan lógica de dominio:
+
+| Archivo | Servicios |
+|---|---|
+| `apps/inventario/services.py` | `registrar_movimiento()`, `stock_bajo_minimo()` |
+| `apps/integracion/services.py` | `registrar_evento_auditoria()`, `crm_configurado()` |
+| `apps/shared/services.py` | `ejecutar_en_transaccion()`, `registrar_audit_log()` |
 
 ---
 
@@ -307,7 +443,6 @@ Django>=4.2,<5.0
 psycopg2-binary
 django-axes              # bloqueo por intentos fallidos (AC-7)
 django-guardian          # permisos a nivel de objeto
-# django-pwned-passwords   # (temporalmente fuera: incompatible con Django 4.2 — usar ugettext obsoleto. Revisar en próxima actualización)
 argon2-cffi              # hasher Argon2
 celery                   # tareas asíncronas
 redis                    # broker Celery + caché

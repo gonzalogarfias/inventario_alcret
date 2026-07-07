@@ -49,6 +49,17 @@
                 </div>
             </div>
         </div>
+        <a href="{% url 'alerta_list' %}" class="bg-white rounded-xl shadow-sm border-0 p-5 card-hover block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-ink-secondary font-medium">Alertas activas</p>
+                    <p class="text-2xl font-bold text-ink mt-1">{{ total_alertas }}</p>
+                </div>
+                <div class="w-10 h-10 bg-red-50 text-red-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                </div>
+            </div>
+        </a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

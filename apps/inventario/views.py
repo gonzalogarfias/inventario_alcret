@@ -1,15 +1,30 @@
 import csv
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
-from django.urls import reverse_lazy
+
 from django.contrib import messages
-from django.http import HttpResponse, StreamingHttpResponse
-from django.db.models import Sum, F, Value
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse, StreamingHttpResponse
+from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from .models import Producto, Categoria, Almacen, Movimiento, Stock
+from openpyxl.styles import Alignment, Font, PatternFill
+
+from .models import Almacen, Categoria, Movimiento, Producto, Stock
+
+
+class InventarioPermissionMixin(LoginRequiredMixin):
+    roles_permitidos = []
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if self.roles_permitidos and request.user.rol not in self.roles_permitidos:
+            messages.error(request, "No tenés permiso para realizar esta acción.")
+            return redirect(self.request.GET.get("next", reverse("producto_list")))
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ProductoListView(LoginRequiredMixin, ListView):
@@ -45,7 +60,8 @@ class ProductoListView(LoginRequiredMixin, ListView):
 producto_list = ProductoListView.as_view()
 
 
-class ProductoCreateView(LoginRequiredMixin, CreateView):
+class ProductoCreateView(InventarioPermissionMixin, CreateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Producto
     template_name = "inventario/producto_form.html"
     fields = ["sku", "nombre", "descripcion", "categoria", "precio_venta", "stock_minimo"]
@@ -59,7 +75,8 @@ class ProductoCreateView(LoginRequiredMixin, CreateView):
 producto_create = ProductoCreateView.as_view()
 
 
-class ProductoUpdateView(LoginRequiredMixin, UpdateView):
+class ProductoUpdateView(InventarioPermissionMixin, UpdateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Producto
     template_name = "inventario/producto_form.html"
     fields = ["sku", "nombre", "descripcion", "categoria", "precio_venta", "stock_minimo", "activo"]
@@ -97,7 +114,8 @@ class CategoriaListView(LoginRequiredMixin, ListView):
 categoria_list = CategoriaListView.as_view()
 
 
-class CategoriaCreateView(LoginRequiredMixin, CreateView):
+class CategoriaCreateView(InventarioPermissionMixin, CreateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Categoria
     template_name = "inventario/categoria_form.html"
     fields = ["nombre", "descripcion"]
@@ -111,7 +129,8 @@ class CategoriaCreateView(LoginRequiredMixin, CreateView):
 categoria_create = CategoriaCreateView.as_view()
 
 
-class CategoriaUpdateView(LoginRequiredMixin, UpdateView):
+class CategoriaUpdateView(InventarioPermissionMixin, UpdateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Categoria
     template_name = "inventario/categoria_form.html"
     fields = ["nombre", "descripcion", "activo"]
@@ -134,7 +153,8 @@ class AlmacenListView(LoginRequiredMixin, ListView):
 almacen_list = AlmacenListView.as_view()
 
 
-class AlmacenCreateView(LoginRequiredMixin, CreateView):
+class AlmacenCreateView(InventarioPermissionMixin, CreateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Almacen
     template_name = "inventario/almacen_form.html"
     fields = ["nombre", "ubicacion"]
@@ -148,7 +168,8 @@ class AlmacenCreateView(LoginRequiredMixin, CreateView):
 almacen_create = AlmacenCreateView.as_view()
 
 
-class AlmacenUpdateView(LoginRequiredMixin, UpdateView):
+class AlmacenUpdateView(InventarioPermissionMixin, UpdateView):
+    roles_permitidos = ["ADMIN", "ALMACEN"]
     model = Almacen
     template_name = "inventario/almacen_form.html"
     fields = ["nombre", "ubicacion", "activo"]
@@ -199,9 +220,19 @@ class MovimientoCreateView(LoginRequiredMixin, CreateView):
             initial["producto"] = self.request.GET.get("producto")
         return initial
 
-    def form_valid(self, form):
-        if form.instance.tipo == Movimiento.Tipo.AJUSTE and not self.request.user.has_perm("usuarios.puede_ajustar_stock"):
+    def _check_movimiento_permission(self, form):
+        from apps.usuarios.models import Usuario
+        tipo = form.instance.tipo
+        if tipo == Movimiento.Tipo.AJUSTE and not self.request.user.has_perm("usuarios.puede_ajustar_stock"):
             messages.error(self.request, "No tenés permiso para realizar ajustes de stock.")
+            return False
+        if tipo == Movimiento.Tipo.ENTRADA and self.request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+            messages.error(self.request, "No tenés permiso para registrar entradas de stock.")
+            return False
+        return True
+
+    def form_valid(self, form):
+        if not self._check_movimiento_permission(form):
             return self.form_invalid(form)
         form.instance.realizada_por = self.request.user
         cantidad = form.instance.cantidad

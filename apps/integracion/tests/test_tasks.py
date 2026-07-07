@@ -1,7 +1,9 @@
-import pytest
 from unittest.mock import patch
-from apps.integracion.tasks import enviar_evento_crm
+
+import pytest
+
 from apps.integracion.models import SyncLog
+from apps.integracion.tasks import enviar_evento_crm
 
 
 @pytest.mark.django_db

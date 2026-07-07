@@ -1,9 +1,11 @@
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Sum, F
-from django.db.models.functions import TruncDate
-from django.utils import timezone
 from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, F, Sum
+from django.db.models.functions import TruncDate
+from django.http import JsonResponse
+from django.utils import timezone
+
 from apps.inventario.models import Movimiento, Stock
 
 
