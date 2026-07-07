@@ -28,7 +28,7 @@ class Command(BaseCommand):
             help="Actualizar el valor de CRM_HMAC_SECRET en el archivo .env",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, **options):
         dias = options["dias_expiracion"]
         secreto_nuevo = secrets.token_hex(32)
         clave_publica = secrets.token_hex(8)
