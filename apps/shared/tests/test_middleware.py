@@ -1,6 +1,5 @@
 import pytest
 from django.http import HttpResponse
-from django.utils import timezone
 
 from apps.shared.middleware import (
     SecurityHeadersMiddleware,
