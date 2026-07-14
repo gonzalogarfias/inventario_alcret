@@ -13,6 +13,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
 db_url = config("DATABASE_URL", default=None)
 if db_url:
     DATABASES = {"default": dj_database_url.parse(db_url, conn_max_age=600)}
