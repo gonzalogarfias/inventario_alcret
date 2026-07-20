@@ -1,14 +1,14 @@
 ```mermaid
 erDiagram
-    Categoria ||--o{ Producto : "tiene"
-    Producto ||--o{ Stock : "tiene"
-    Almacen ||--o{ Stock : "tiene"
-    Producto ||--o{ Movimiento : "registra"
-    Almacen ||--o{ Movimiento : "origina"
-    Usuario ||--o{ Movimiento : "realiza"
-    Producto ||--o| AlertaConfig : "configura"
-    Producto ||--o{ Alerta : "genera"
-    Usuario ||--o{ AuditLog : "audita"
+    Categoria ||--o{ Producto : ""
+    Producto ||--o{ Stock : ""
+    Almacen ||--o{ Stock : ""
+    Producto ||--o{ Movimiento : ""
+    Almacen ||--o{ Movimiento : ""
+    Usuario ||--o{ Movimiento : ""
+    Producto ||--o| AlertaConfig : ""
+    Producto ||--o{ Alerta : ""
+    Usuario ||--o{ AuditLog : ""
 
     Categoria {
         uuid id PK
@@ -23,7 +23,7 @@ erDiagram
         string sku UK
         string nombre
         text descripcion
-        fk categoria FK
+        uuid categoria_id FK
         decimal precio_venta
         decimal costo_promedio
         decimal stock_minimo
@@ -42,21 +42,21 @@ erDiagram
 
     Stock {
         uuid id PK
-        fk producto FK
-        fk almacen FK
+        uuid producto_id FK
+        uuid almacen_id FK
         decimal cantidad
         datetime updated_at
     }
 
     Movimiento {
         uuid id PK
-        string tipo "ENTRADA | SALIDA | AJUSTE"
-        fk producto FK
-        fk almacen FK
+        string tipo
+        uuid producto_id FK
+        uuid almacen_id FK
         decimal cantidad
         decimal costo_unitario
         text motivo
-        fk realizada_por FK
+        uuid realizada_por_id FK
         datetime created_at
     }
 
@@ -64,7 +64,7 @@ erDiagram
         uuid id PK
         string email UK
         string nombre
-        string rol "ADMIN | VENDEDOR | ALMACENISTA"
+        string rol
         string password
         bool activo
         bool is_staff
@@ -73,13 +73,11 @@ erDiagram
         datetime ultimo_acceso
         int intentos_fallidos
         datetime bloqueado_hasta
-        m2m groups
-        m2m user_permissions
     }
 
     AlertaConfig {
         uuid id PK
-        fk producto FK UK
+        uuid producto_id FK UK
         int umbral_minimo
         bool activo
         datetime created_at
@@ -88,17 +86,17 @@ erDiagram
 
     Alerta {
         uuid id PK
-        fk producto FK
+        uuid producto_id FK
         text mensaje
-        string estado "PENDIENTE | VISTA | RESUELTA"
+        string estado
         datetime created_at
         datetime resuelta_en
     }
 
     AuditLog {
         uuid id PK
-        string evento "12 tipos"
-        fk usuario FK
+        string evento
+        uuid usuario_id FK
         string ip_address
         datetime timestamp
         json datos
@@ -116,7 +114,7 @@ erDiagram
     SyncLog {
         uuid id PK
         string evento
-        string estado "PENDIENTE | ENVIADO | FALLIDO"
+        string estado
         json payload
         json respuesta
         int intentos
@@ -146,7 +144,7 @@ erDiagram
     ReporteProgramado {
         uuid id PK
         string nombre
-        string tipo "EXCEL | PDF | CSV"
+        string tipo
         string cron_expresion
         json destinatarios
         bool activo
