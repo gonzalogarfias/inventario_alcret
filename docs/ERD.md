@@ -77,7 +77,7 @@ erDiagram
 
     AlertaConfig {
         uuid id PK
-        uuid producto_id FK UK
+        uuid producto_id FK
         int umbral_minimo
         bool activo
         datetime created_at
