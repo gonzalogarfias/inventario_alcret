@@ -27,9 +27,15 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="productos")
-    precio_venta = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    precio_venta = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))]
+    )
     costo_promedio = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
-    stock_minimo = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    stock_minimo = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)]
+    )
     activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,13 +69,22 @@ class Stock(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="stocks")
     almacen = models.ForeignKey(Almacen, on_delete=models.CASCADE, related_name="stocks")
-    cantidad = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    cantidad = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)]
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "stock"
         verbose_name_plural = "stocks"
         unique_together = ["producto", "almacen"]
+        indexes = [
+            models.Index(fields=["producto", "almacen"]),
+        ]
+        constraints = [
+            models.CheckConstraint(check=models.Q(cantidad__gte=0), name="stock_no_negativo"),
+        ]
 
     def __str__(self):
         return f"{self.producto.nombre} @ {self.almacen.nombre}: {self.cantidad}"
@@ -83,13 +98,25 @@ class Movimiento(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT, related_name="movimientos")
-    almacen = models.ForeignKey(Almacen, on_delete=models.PROTECT, related_name="movimientos")
-    cantidad = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.001"))])
-    costo_unitario = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    producto = models.ForeignKey(
+        Producto, on_delete=models.PROTECT, related_name="movimientos"
+    )
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.PROTECT, related_name="movimientos"
+    )
+    cantidad = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.001"))]
+    )
+    costo_unitario = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
     motivo = models.TextField(blank=True)
     realizada_por = models.ForeignKey(
-        "usuarios.Usuario", on_delete=models.SET_NULL, null=True, related_name="movimientos"
+        "usuarios.Usuario",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="movimientos",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -97,6 +124,15 @@ class Movimiento(models.Model):
         verbose_name = "movimiento"
         verbose_name_plural = "movimientos"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["producto", "almacen", "-created_at"]),
+            models.Index(fields=["tipo", "-created_at"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.tipo == self.Tipo.SALIDA and self.cantidad > 0:
+            self.cantidad = -self.cantidad
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.tipo} {self.producto.sku} x{self.cantidad}"

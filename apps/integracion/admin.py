@@ -12,3 +12,9 @@ class WebhookCRMAdmin(admin.ModelAdmin):
 class SyncLogAdmin(admin.ModelAdmin):
     list_display = ["evento", "estado", "intentos", "created_at"]
     list_filter = ["estado", "evento"]
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -17,6 +17,10 @@ local_settings.py
 db.sqlite3
 media/
 staticfiles/
+facturas/
+
+# Testing
+.coverage
 
 # Environment
 .env

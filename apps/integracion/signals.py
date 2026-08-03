@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Movimiento)
 def publicar_movimiento_al_crm(sender, instance, created, **kwargs):
     if not created:
+        return
+    if not settings.CRM_WEBHOOK_URL:
+        logger.debug("CRM_WEBHOOK_URL no configurado, skipping CRM task")
         return
     try:
         enviar_evento_crm.delay(

@@ -1,12 +1,15 @@
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django.test.utils import override_settings
 
 from apps.inventario.models import Movimiento
 
 
 @pytest.mark.django_db
 class TestIntegracionSignals:
+    @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.integracion.signals.enviar_evento_crm.delay")
     def test_movimiento_encola_tarea_crm(self, mock_delay, producto, almacen, usuario_admin):
         Movimiento.objects.create(
@@ -22,8 +25,11 @@ class TestIntegracionSignals:
         assert kwargs["payload"]["producto_id"] == str(producto.pk)
         assert kwargs["payload"]["cantidad"] == "10"
 
+    @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.integracion.signals.enviar_evento_crm.delay")
     def test_movimiento_no_encola_si_excepcion(self, mock_delay, producto, almacen, usuario_admin):
+        from apps.inventario.models import Stock
+        Stock.objects.create(producto=producto, almacen=almacen, cantidad=Decimal("100"))
         mock_delay.side_effect = Exception("Redis caído")
         Movimiento.objects.create(
             tipo=Movimiento.Tipo.SALIDA,

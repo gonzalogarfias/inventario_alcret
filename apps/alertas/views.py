@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import ListView, UpdateView
+from django.views import View
+from django.views.generic import ListView
 
 from .models import Alerta
 
@@ -20,16 +22,23 @@ class AlertaListView(LoginRequiredMixin, ListView):
 alerta_list = AlertaListView.as_view()
 
 
-class AlertaResolveView(LoginRequiredMixin, UpdateView):
-    model = Alerta
-    fields = []
-    success_url = reverse_lazy("alerta_list")
+class AlertaResolveView(LoginRequiredMixin, View):
+    """Marca una alerta como resuelta.
 
-    def form_valid(self, form):
-        form.instance.estado = Alerta.Estado.RESUELTA
-        form.instance.resuelta_en = timezone.now()
-        messages.success(self.request, "Alerta marcada como resuelta.")
-        return super().form_valid(form)
+    Solo acepta POST (cambio de estado). Un GET previo renderizaba un
+    template inexistente y devolvía 500.
+    """
+
+    http_method_names = ["post"]
+
+    def post(self, request, pk):
+        alerta = get_object_or_404(Alerta, pk=pk)
+        if alerta.estado != Alerta.Estado.RESUELTA:
+            alerta.estado = Alerta.Estado.RESUELTA
+            alerta.resuelta_en = timezone.now()
+            alerta.save(update_fields=["estado", "resuelta_en"])
+            messages.success(request, "Alerta marcada como resuelta.")
+        return redirect(reverse_lazy("alerta_list"))
 
 
 alerta_resolve = AlertaResolveView.as_view()

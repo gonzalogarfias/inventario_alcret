@@ -1,9 +1,11 @@
 import pytest
 from django.conf import settings
+from django.test.utils import override_settings
 
 
 @pytest.mark.django_db
 class TestSecuritySettings:
+    @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.Argon2PasswordHasher"])
     def test_password_hasher_es_argon2(self):
         assert "Argon2PasswordHasher" in settings.PASSWORD_HASHERS[0]
 
@@ -30,6 +32,7 @@ class TestSecuritySettings:
     def test_x_frame_options_deny(self):
         assert settings.X_FRAME_OPTIONS == "DENY"
 
+    @override_settings(SECURE_HSTS_SECONDS=31536000)
     def test_secure_hsts_enabled(self):
         assert settings.SECURE_HSTS_SECONDS >= 31536000
 

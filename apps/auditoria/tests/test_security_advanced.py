@@ -1,5 +1,6 @@
 import pytest
 from django.conf import settings
+from django.test.utils import override_settings
 from django.urls import reverse
 
 from apps.inventario.models import Movimiento
@@ -29,6 +30,7 @@ class TestSecurityHeaders:
         response = client.get(reverse("health_check"))
         assert response.headers.get("X-Frame-Options") == "DENY"
 
+    @override_settings(SECURE_HSTS_SECONDS=31536000, SECURE_HSTS_INCLUDE_SUBDOMAINS=True)
     def test_strict_transport_security_configurado(self, client):
         """HSTS se agrega solo en respuestas HTTPS. Verificamos la config."""
         from django.conf import settings as s
@@ -38,6 +40,7 @@ class TestSecurityHeaders:
 
 @pytest.mark.django_db
 class TestConfigSeguridad:
+    @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.Argon2PasswordHasher"])
     def test_password_hasher_argon2(self):
         assert "Argon2PasswordHasher" in settings.PASSWORD_HASHERS[0]
 

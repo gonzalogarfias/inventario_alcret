@@ -20,10 +20,13 @@
                 {{ alerta.get_estado_display }}
               </span>
               {% if alerta.estado != 'RESUELTA' %}
-                <a href="{% url 'alerta_resolve' alerta.pk %}"
-                   class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-                  Resolver
-                </a>
+                <form method="post" action="{% url 'alerta_resolve' alerta.pk %}">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                    Resolver
+                  </button>
+                </form>
               {% endif %}
             </div>
           </div>

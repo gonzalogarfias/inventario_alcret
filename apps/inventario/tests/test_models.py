@@ -1,3 +1,5 @@
+"""Tests de modelos de inventario."""
+
 from decimal import Decimal
 
 import pytest
@@ -47,8 +49,11 @@ class TestProductoModel:
 
     def test_stock_minimo_puede_ser_cero(self, categoria):
         prod = Producto.objects.create(
-            sku="SKU-CERO", nombre="Stock Cero", categoria=categoria,
-            precio_venta=Decimal("50"), stock_minimo=Decimal("0"),
+            sku="SKU-CERO",
+            nombre="Stock Cero",
+            categoria=categoria,
+            precio_venta=Decimal("50"),
+            stock_minimo=Decimal("0"),
         )
         assert prod.stock_minimo == Decimal("0")
 
@@ -102,6 +107,7 @@ class TestMovimientoModel:
         assert str(mov) == f"ENTRADA {producto.sku} x10"
 
     def test_crear_movimiento_salida(self, producto, almacen, usuario_admin):
+        Stock.objects.create(producto=producto, almacen=almacen, cantidad=Decimal("100"))
         mov = Movimiento.objects.create(
             tipo=Movimiento.Tipo.SALIDA,
             producto=producto,
@@ -133,8 +139,15 @@ class TestMovimientoModel:
             mov.full_clean()
 
     def test_ordering_descendente(self, producto, almacen, usuario_admin):
-        m1 = Movimiento.objects.create(tipo=Movimiento.Tipo.ENTRADA, producto=producto, almacen=almacen, cantidad=1, realizada_por=usuario_admin)
-        m2 = Movimiento.objects.create(tipo=Movimiento.Tipo.SALIDA, producto=producto, almacen=almacen, cantidad=1, realizada_por=usuario_admin)
+        Stock.objects.create(producto=producto, almacen=almacen, cantidad=Decimal("100"))
+        m1 = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto, almacen=almacen,
+            cantidad=1, realizada_por=usuario_admin
+        )
+        m2 = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.SALIDA, producto=producto, almacen=almacen,
+            cantidad=1, realizada_por=usuario_admin
+        )
         qs = Movimiento.objects.all()
         assert qs[0] == m2
         assert qs[1] == m1

@@ -10,13 +10,29 @@
     <meta name="theme-color" content="#0B3C95">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Preconnect optimizado -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    
+    <!-- Google Fonts con SRI (si aplica) o al menos subresource hint -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (CDN dev — en producción compilar con CLI) -->
+    <!-- NOTA: Para producción, reemplazar por {% static 'css/tailwind.css' %} -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    
+    <!-- Alpine.js 3.14.3 con SRI -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
+    
+    <!-- HTMX 1.9.12 -->
+    <script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
+    
+    <!-- Chart.js 4.4.7 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -106,7 +122,26 @@
     {% include "components/toast.html" %}
 
     <script src="{% static 'js/app.js' %}"></script>
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
+    
+    <!-- Service Worker con update check -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(reg => {
+                    console.log('SW registrado:', reg.scope);
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('Nueva versión disponible. Recarga para actualizar.');
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.error('SW error:', err));
+        }
+    </script>
+    
     <script>
         function app() {
             return {

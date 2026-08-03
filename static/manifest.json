@@ -3,10 +3,12 @@
   "short_name": "ALCRET",
   "description": "Sistema de Gestión de Inventario",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#FAFAFC",
   "theme_color": "#0B3C95",
   "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/static/img/logo-icon.png",
@@ -19,6 +21,20 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/img/screenshot-dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/static/img/screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ]
 }

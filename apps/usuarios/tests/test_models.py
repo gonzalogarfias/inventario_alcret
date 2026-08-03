@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from django.contrib.auth.hashers import Argon2PasswordHasher
 from django.db.utils import IntegrityError
+from django.test.utils import override_settings
 from django.utils import timezone
 
 from apps.usuarios.models import Usuario
@@ -50,6 +51,7 @@ class TestUsuarioModel:
                 password="Pass456!",
             )
 
+    @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.Argon2PasswordHasher"])
     def test_password_se_hashea_con_argon2(self, db):
         usuario = Usuario.objects.create_user(
             email="hash@test.com",

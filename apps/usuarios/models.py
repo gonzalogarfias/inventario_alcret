@@ -3,11 +3,17 @@ from typing import Any, Optional
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 
 class UsuarioManager(BaseUserManager["Usuario"]):
     def create_user(
-        self, email: str, nombre: str, rol: str, password: Optional[str] = None, **extra_fields: Any
+        self,
+        email: str,
+        nombre: str,
+        rol: str,
+        password: Optional[str] = None,
+        **extra_fields: Any,
     ) -> "Usuario":
         if not email:
             raise ValueError("El email es obligatorio")
@@ -17,7 +23,9 @@ class UsuarioManager(BaseUserManager["Usuario"]):
         usuario.save(using=self._db)
         return usuario
 
-    def create_superuser(self, email: str, nombre: str, password: Optional[str] = None) -> "Usuario":
+    def create_superuser(
+        self, email: str, nombre: str, password: Optional[str] = None
+    ) -> "Usuario":
         return self.create_user(
             email=email,
             nombre=nombre,
@@ -29,10 +37,7 @@ class UsuarioManager(BaseUserManager["Usuario"]):
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
-    """Modelo de usuario personalizado con login por email y roles RBAC.
-
-    Implementa la matriz de permisos definida en ARQUITECTURA.md.
-    """
+    """Modelo de usuario personalizado con login por email y roles RBAC."""
 
     class Rol(models.TextChoices):
         ADMINISTRADOR = "ADMIN", "Administrador"
@@ -69,13 +74,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return f"{self.nombre} <{self.email}>"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        if self.pk and Usuario.objects.filter(pk=self.pk).exists():
-            original = Usuario.objects.get(pk=self.pk)
-            if original.bloqueado_hasta != self.bloqueado_hasta:
-                self.intentos_fallidos = 0
+        # Solo resetear intentos si se desbloquea explícitamente (bloqueado_hasta pasa a None)
+        if self.pk:
+            try:
+                original = Usuario.objects.only("bloqueado_hasta").get(pk=self.pk)
+                if original.bloqueado_hasta is not None and self.bloqueado_hasta is None:
+                    self.intentos_fallidos = 0
+            except Usuario.DoesNotExist:
+                pass
         super().save(*args, **kwargs)
 
     @property
     def esta_bloqueado(self) -> bool:
-        from django.utils import timezone
         return bool(self.bloqueado_hasta and self.bloqueado_hasta > timezone.now())

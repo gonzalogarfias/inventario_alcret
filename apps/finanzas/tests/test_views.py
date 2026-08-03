@@ -1,0 +1,109 @@
+import json
+
+import pytest
+from django.urls import reverse
+
+from apps.finanzas.models import Factura
+
+
+@pytest.mark.django_db
+class TestFinanzasViews:
+    def test_dashboard_requiere_login(self, client):
+        response = client.get(reverse("finanzas_dashboard"))
+        assert response.status_code == 302
+
+    def test_dashboard_autenticado(self, authenticated_client):
+        response = authenticated_client.get(reverse("finanzas_dashboard"))
+        assert response.status_code == 200
+        assert "facturas_recientes" in response.context
+
+    def test_upload_requiere_login(self, client):
+        response = client.get(reverse("factura_upload"))
+        assert response.status_code == 302
+
+    def test_upload_get(self, authenticated_client):
+        response = authenticated_client.get(reverse("factura_upload"))
+        assert response.status_code == 200
+
+    def test_upload_post(self, authenticated_client, producto, almacen, usuario_admin):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        archivo = SimpleUploadedFile("factura.pdf", b"%PDF-1.4 test content", content_type="application/pdf")
+        response = authenticated_client.post(reverse("factura_upload"), {
+            "tipo": Factura.Tipo.COMPRA,
+            "numero": "TEST-001",
+            "proveedor_cliente": "Test SA",
+            "monto": "500.00",
+            "fecha": "2026-07-01",
+            "movimiento": mov.pk,
+            "observaciones": "Test",
+            "archivo": archivo,
+        }, follow=True)
+        assert Factura.objects.filter(numero="TEST-001").exists()
+        assert response.status_code == 200
+
+    def test_datos_finanzas_api(self, authenticated_client, producto, almacen, usuario_admin):
+        from apps.inventario.models import Movimiento
+        Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=100, realizada_por=usuario_admin,
+        )
+        response = authenticated_client.get(reverse("datos_finanzas"))
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert "labels" in data
+        assert "compras" in data
+        assert "ventas" in data
+        assert "valor_inventario" in data
+
+
+@pytest.mark.django_db
+class TestFacturaArchivo:
+    def _crear_factura(self, producto, almacen, usuario_admin):
+        from datetime import date
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        archivo = SimpleUploadedFile("factura.pdf", b"%PDF-1.4 contenido", content_type="application/pdf")
+        return Factura.objects.create(
+            tipo=Factura.Tipo.COMPRA,
+            numero="ARCH-001",
+            proveedor_cliente="Test SA",
+            monto="500.00",
+            fecha=date(2026, 7, 1),
+            movimiento=mov,
+            archivo=archivo,
+            subido_por=usuario_admin,
+        )
+
+    def test_archivo_requiere_login(self, client, producto, almacen, usuario_admin):
+        factura = self._crear_factura(producto, almacen, usuario_admin)
+        response = client.get(reverse("factura_archivo", args=[factura.pk]))
+        assert response.status_code == 302
+
+    def test_archivo_acceso_admin(self, authenticated_client, producto, almacen, usuario_admin):
+        factura = self._crear_factura(producto, almacen, usuario_admin)
+        response = authenticated_client.get(reverse("factura_archivo", args=[factura.pk]))
+        assert response.status_code == 200
+        contenido = b"".join(response.streaming_content)
+        assert b"%PDF-1.4 contenido" in contenido
+
+    def test_archivo_acceso_otros_roles(self, client_vendedor, client_almacenista, producto, almacen, usuario_admin):
+        factura = self._crear_factura(producto, almacen, usuario_admin)
+        assert client_vendedor.get(reverse("factura_archivo", args=[factura.pk])).status_code == 200
+        assert client_almacenista.get(reverse("factura_archivo", args=[factura.pk])).status_code == 200
+
+    def test_archivo_inexistente_404(self, authenticated_client):
+        import uuid
+        response = authenticated_client.get(reverse("factura_archivo", args=[uuid.uuid4()]))
+        assert response.status_code == 404

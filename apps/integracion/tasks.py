@@ -11,7 +11,7 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3)
+@shared_task(bind=True, max_retries=3, retry_backoff=True, retry_backoff_max=900)
 def enviar_evento_crm(self, evento, payload):
     from .models import SyncLog
 
@@ -31,7 +31,12 @@ def enviar_evento_crm(self, evento, payload):
         return
 
     import requests
-    body = json.dumps({"evento": evento, "payload": payload}, default=str).encode()
+    timestamp = timezone.now().isoformat()
+    body = json.dumps({
+        "evento": evento,
+        "payload": payload,
+        "timestamp": timestamp,
+    }, default=str).encode()
     firma = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
     try:
@@ -41,6 +46,7 @@ def enviar_evento_crm(self, evento, payload):
             headers={
                 "Content-Type": "application/json",
                 "X-Signature": firma,
+                "X-Timestamp": timestamp,
             },
             timeout=30,
         )
@@ -53,8 +59,7 @@ def enviar_evento_crm(self, evento, payload):
         sync_log.intentos = self.request.retries + 1
         sync_log.save()
 
-        backoff = [60, 300, 900][self.request.retries]
-        raise self.retry(exc=exc, countdown=backoff)
+        raise self.retry(exc=exc)
 
     sync_log.intentos = self.request.retries + 1
     sync_log.save()

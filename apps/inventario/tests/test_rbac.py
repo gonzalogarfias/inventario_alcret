@@ -1,3 +1,5 @@
+"""Tests RBAC básicos de inventario."""
+
 import pytest
 from django.urls import reverse
 

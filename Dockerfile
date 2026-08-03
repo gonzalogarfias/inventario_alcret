@@ -32,6 +32,11 @@ COPY --from=builder /app/ .
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+RUN addgroup --system app && adduser --system --ingroup app app
+RUN chown -R app:app /app
+
+USER app
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \

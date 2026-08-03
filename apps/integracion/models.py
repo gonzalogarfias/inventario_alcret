@@ -1,5 +1,7 @@
+import re
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -60,7 +62,20 @@ class ClaveCRM(models.Model):
         estado = "activa" if self.activa else "inactiva"
         return f"{self.clave_publica} ({estado})"
 
+    def clean(self):
+        super().clean()
+        if self._state.adding and self.expira_en is None:
+            raise ValidationError({"expira_en": "La fecha de expiración es obligatoria."})
+        if self._state.adding and self.expira_en <= timezone.now():
+            raise ValidationError({"expira_en": "La fecha de expiración debe ser futura."})
+        if not re.fullmatch(r"[0-9a-f]{64}", self.hash_clave or ""):
+            raise ValidationError(
+                {"hash_clave": "El hash debe ser un SHA-256 hexadecimal de 64 caracteres."}
+            )
+
     def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.full_clean()
         if self.activa:
             ClaveCRM.objects.filter(activa=True).exclude(pk=self.pk).update(
                 activa=False, rotada_en=timezone.now()

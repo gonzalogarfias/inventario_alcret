@@ -1,44 +1,42 @@
+
 import pytest
 
 from apps.alertas.models import Alerta
-from apps.inventario.models import Movimiento, Stock
+from apps.inventario.models import Movimiento
 
 
 @pytest.mark.django_db
-class TestAlertasSignals:
-    def test_movimiento_salida_crea_alerta_si_stock_bajo(self, producto, almacen, usuario_admin):
+class TestAlertaSignals:
+    def test_movimiento_crea_alerta_si_stock_bajo(self, producto, almacen, usuario_admin):
+        # Crear stock inicial bajo
+        from apps.inventario.models import Stock
         Stock.objects.create(producto=producto, almacen=almacen, cantidad=3)
+        producto.stock_minimo = 5
+        producto.save()
+
+        # Realizar salida que deje stock < mínimo
         Movimiento.objects.create(
             tipo=Movimiento.Tipo.SALIDA,
             producto=producto,
             almacen=almacen,
-            cantidad=-3,
+            cantidad=1,
             realizada_por=usuario_admin,
         )
-        alertas = Alerta.objects.filter(producto=producto)
-        assert alertas.count() >= 0  # dependiendo del estado del stock
 
-    def test_movimiento_entrada_no_crea_alerta_si_stock_bajo(self, producto, almacen, usuario_admin):
-        Stock.objects.create(producto=producto, almacen=almacen, cantidad=0)
+        assert Alerta.objects.filter(producto=producto, estado=Alerta.Estado.PENDIENTE).exists()
+
+    def test_movimiento_no_crea_alerta_si_stock_ok(self, producto, almacen, usuario_admin):
+        from apps.inventario.models import Stock
+        Stock.objects.create(producto=producto, almacen=almacen, cantidad=100)
+        producto.stock_minimo = 5
+        producto.save()
+
         Movimiento.objects.create(
-            tipo=Movimiento.Tipo.ENTRADA,
+            tipo=Movimiento.Tipo.SALIDA,
             producto=producto,
             almacen=almacen,
             cantidad=10,
             realizada_por=usuario_admin,
         )
-        alertas = Alerta.objects.filter(producto=producto)
-        assert alertas.count() == 0
 
-    def test_alerta_model_string(self, producto):
-        alerta = Alerta.objects.create(
-            producto=producto,
-            mensaje="Test alerta para producto con stock bajo",
-        )
-        assert str(alerta).startswith("[PENDIENTE]")
-        assert "stock bajo" in str(alerta)
-
-    def test_alerta_estados_disponibles(self):
-        assert Alerta.Estado.PENDIENTE == "PENDIENTE"
-        assert Alerta.Estado.VISTA == "VISTA"
-        assert Alerta.Estado.RESUELTA == "RESUELTA"
+        assert not Alerta.objects.filter(producto=producto).exists()

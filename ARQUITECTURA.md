@@ -27,7 +27,7 @@ Este archivo define el esqueleto técnico del proyecto. Ningún agente debe modi
 
 | Librería adicional | Justificación |
 |---|---|
-| Chart.js 4.x (CDN) | Visualización de KPIs y gráficos en dashboard. Sin build step, CDN compatible con Alpine.js |
+| Chart.js 4.x (CDN) | Visualización de KPIs y gráficos en dashboard y finanzas. Sin build step, CDN compatible con Alpine.js |
 | openpyxl | Exportación de reportes a Excel nativo (.xlsx) para distribución a stakeholders |
 
 ---
@@ -52,7 +52,7 @@ Este archivo define el esqueleto técnico del proyecto. Ningún agente debe modi
                      │
 ┌────────────────────▼────────────────────────────────────┐
 │  CAPA 4 — Módulos funcionales                           │
-│  inventario · auditoria · metricas · usuarios · alertas │
+│  inventario · auditoria · metricas · usuarios · alertas · finanzas │
 └────────────────────┬────────────────────────────────────┘
                      │
 ┌────────────────────▼──────────────────┐  ┌─────────────┐
@@ -71,7 +71,8 @@ proyecto/
 │   ├── settings/
 │   │   ├── base.py          # Settings comunes
 │   │   ├── development.py   # DEBUG=True, SQLite permitido solo aquí
-│   │   └── production.py    # Sin DEBUG, vars desde entorno
+│   │   ├── production.py    # Sin DEBUG, vars desde entorno
+│   │   └── test_pg.py       # Tests contra PostgreSQL (pytest --ds=...)
 │   ├── urls.py
 │   └── wsgi.py
 │
@@ -82,11 +83,13 @@ proyecto/
 │   ├── metricas/            # KPIs, dashboards, reportes
 │   ├── integracion/         # Webhooks CRM, cola de sync, rotación de claves
 │   ├── alertas/             # Alertas de stock bajo, configuración de umbrales
+│   ├── finanzas/            # Facturas COMPRA/VENTA, dashboard financiero, subida de PDF/XML
 │   └── shared/              # Middleware, servicios compartidos, value objects
 │
 ├── templates/               # Templates Django globales
 │   ├── base.html            # Layout principal con Alpine.js
-│   └── components/          # Fragmentos reutilizables (HTMX targets)
+│   ├── components/          # Fragmentos reutilizables (HTMX targets)
+│   └── finanzas/            # Dashboard financiero y formulario de subida de facturas
 │
 ├── static/
 │   ├── js/                  # Alpine.js components y service worker
@@ -137,6 +140,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 | Gestionar usuarios | ✅ | ❌ | ❌ |
 | Exportar reportes | ✅ | ✅ | ✅ |
 | Configurar integración CRM | ✅ | ❌ | ❌ |
+| Ver dashboard finanzas | ✅ | ✅ | ✅ |
+| Subir factura COMPRA | ✅ | ❌ | ✅ |
+| Subir factura VENTA | ✅ | ✅ | ❌ |
 
 **Implementación:** Usar `django-guardian` para permisos a nivel de objeto cuando se necesite granularidad por producto o almacén. Los permisos de rol se validan en cada view con el decorador `@permission_required` o mixin `PermissionRequiredMixin`.
 
@@ -171,7 +177,7 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.Argon2PasswordHasher"]
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "...MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
     {"NAME": "...CommonPasswordValidator"},
-    {"NAME": "django_pwned_passwords.password_validation.PwnedPasswordValidator"},
+    {"NAME": "apps.shared.validators.PwnedPasswordValidator"},  # HIBP k-anonymity (red, fail-safe)
 ]
 PASSWORD_RESET_TIMEOUT = 900  # 15 minutos — NIST IA-5(1)(d)
 
@@ -330,6 +336,12 @@ class AuditLog(models.Model):
 REVOKE UPDATE, DELETE ON auditoria_auditlog FROM app_user;
 ```
 
+### Encadenamiento y verificación de integridad
+
+- Al insertar, el `hash_previo` se calcula del último registro leído con `order_by("-timestamp", "-id")`, serializado con `pg_advisory_xact_lock` (clave `_AUDITLOG_CHAIN_LOCK_KEY`) para evitar bifurcaciones de la cadena bajo escrituras concurrentes. En SQLite la serialización de escritores la maneja la propia base de datos.
+- `verificar_integridad()` busca el predecesor con la misma ordenación `(timestamp, id)`: `Q(timestamp__lt=...) | Q(timestamp=..., id__lt=...)`. Así, dos registros que compartan el mismo timestamp (mismo microsegundo) se desempatan por `id`, alineado con lo que vio `save()` al insertar.
+- `verificar_cadena()` (classmethod) recorre toda la tabla ordenada por `("timestamp", "id")` y devuelve `{"valida", "total", "errores"}`.
+
 ---
 
 ## Integración con CRM
@@ -388,9 +400,12 @@ El modelo `ClaveCRM` en `apps/integracion/models.py` gestiona el ciclo de vida d
 
 ### Flujo
 
-1. `Movimiento.post_save` → `verificar_stock_bajo()` compara stock total vs `stock_minimo`
-2. Si el stock está por debajo del umbral, crea un registro `Alerta` con estado `PENDIENTE`
-3. El usuario puede ver las alertas en `/alertas/` y marcarlas como resueltas
+1. `Movimiento.post_save` → `auditar_movimiento()` (inventario) actualiza el stock y emite la señal custom `stock_actualizado` **después** de confirmar la actualización.
+2. `apps/alertas/signals.py` escucha `stock_actualizado` y `verificar_stock_bajo()` lee `stock.cantidad` (valor final) vs `stock_minimo`.
+3. Si el stock está por debajo del umbral, crea un registro `Alerta` con estado `PENDIENTE`.
+4. El usuario puede ver las alertas en `/alertas/` y marcarlas como resueltas.
+
+**Nota de diseño:** alertas NO escucha `post_save` de `Movimiento` directamente. Escuchar la señal custom `stock_actualizado` garantiza que el stock ya fue actualizado y evita depender del orden de carga de `INSTALLED_APPS` o de re-agregar stock en cada movimiento.
 
 ---
 
@@ -413,9 +428,41 @@ Cada app de negocio expone servicios en `services.py` que encapsulan lógica de 
 
 | Archivo | Servicios |
 |---|---|
-| `apps/inventario/services.py` | `registrar_movimiento()`, `stock_bajo_minimo()` |
+| `apps/inventario/services.py` | `registrar_movimiento()`, `stock_bajo_minimo()`, `get_o_crear_stock_bloqueado()` |
 | `apps/integracion/services.py` | `registrar_evento_auditoria()`, `crm_configurado()` |
 | `apps/shared/services.py` | `ejecutar_en_transaccion()`, `registrar_audit_log()` |
+| `apps/finanzas/services.py` | (reservado para lógica de facturación y conciliación) |
+
+**`get_o_crear_stock_bloqueado(producto, almacen)`** usa `select_for_update().get_or_create()` dentro de la señal de inventario. En PostgreSQL, `get_or_create` bajo `select_for_update` puede lanzar `IntegrityError` en condiciones de carrera; el helper reintenta una vez para volver a leer la fila recién creada.
+
+**Señales entre apps:**
+
+| Señal | Emisor | Consumidor | Propósito |
+|---|---|---|---|
+| `stock_actualizado` (custom) | `apps/inventario/signals.py` | `apps/alertas/signals.py` | Avisar que el stock ya fue actualizado y confirmado; emitida tras `auditar_movimiento()`. sender=`Movimiento`, kwargs: `stock`, `movimiento` |
+
+---
+
+## Testing
+
+Suite con `pytest` (config en `pyproject.toml`). Los tests corren por defecto contra SQLite (settings `development`); la validación real contra PostgreSQL se hace con un settings dedicado.
+
+```bash
+# Suite completa en SQLite (rápida, default)
+python -m pytest -q --no-header
+
+# Suite completa contra PostgreSQL (validar concurrencia y features de PG)
+docker compose up -d postgres
+$env:DB_PASSWORD="..."  # u otras variables según tu .env
+python -m pytest --ds=config.settings.test_pg -q --no-header
+
+# Lint
+python -m ruff check .
+```
+
+**Por qué correr contra PG:** los advisory locks (`pg_advisory_xact_lock`), `select_for_update` y el retry por `IntegrityError` de `get_o_crear_stock_bloqueado()` solo se ejercitan de verdad en PostgreSQL. La suite SQLite es el quick check diario; la suite PG es el gate previo a producción.
+
+> **CSP en desarrollo:** la CSP usa `'unsafe-inline'` y `'unsafe-eval'` porque Tailwind (CDN play) y Alpine.js los requieren sin build step. Antes de producción, migrar a Tailwind compilado + Alpine empaquetado y **eliminar** `unsafe-inline`/`unsafe-eval` del `script-src` (NIST SC-23(1)).
 
 ---
 
