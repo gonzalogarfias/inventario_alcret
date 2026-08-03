@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements/production.txt
 
 COPY . .
 RUN DJANGO_SECRET_KEY=build-only \
+    ALLOWED_HOSTS=build-only \
     python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Runtime stage
