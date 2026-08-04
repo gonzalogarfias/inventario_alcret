@@ -47,6 +47,20 @@ class TestFinanzasViews:
         assert Factura.objects.filter(numero="TEST-001").exists()
         assert response.status_code == 200
 
+    def test_upload_movimiento_label_legible(self, authenticated_client, producto, almacen, usuario_admin):
+        from apps.finanzas.forms import FacturaForm
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        form = FacturaForm()
+        campo = form.fields["movimiento"]
+        assert producto.nombre in campo.label_from_instance(mov)
+        assert producto.sku in campo.label_from_instance(mov)
+        assert almacen.nombre in campo.label_from_instance(mov)
+        assert "Entrada" in campo.label_from_instance(mov)
+
     def test_datos_finanzas_api(self, authenticated_client, producto, almacen, usuario_admin):
         from apps.inventario.models import Movimiento
         Movimiento.objects.create(

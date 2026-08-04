@@ -33,6 +33,7 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.ec2
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - static_volume:/app/staticfiles
     depends_on:
@@ -49,12 +50,8 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.ec2
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: always
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
 
   nginx:
     build: ./nginx

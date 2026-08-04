@@ -41,6 +41,7 @@ class AuditLog(models.Model):
         PERMISO_CAMBIADO = "PERMISO_CAMBIADO", "Permiso modificado"
         EXPORTACION = "EXPORTACION", "Exportación de datos"
         SYNC_CRM = "SYNC_CRM", "Sincronización con CRM"
+        ALERTA_RESUELTA = "ALERTA_RESUELTA", "Alerta resuelta"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     evento = models.CharField(max_length=30, choices=Evento.choices)

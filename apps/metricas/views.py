@@ -44,6 +44,23 @@ def _build_cache_key(rol, suffix=""):
     return f"metricas:dashboard:{rol or 'anon'}:{suffix}"
 
 
+def _cache_get(key):
+    """Lee del caché sin romper la vista si Redis no está disponible."""
+    try:
+        return cache.get(key)
+    except Exception:
+        logger.exception("Cache.get falló (Redis caído?); continuando sin caché.")
+        return None
+
+
+def _cache_set(key, data, ttl):
+    """Escribe al caché sin romper la vista si Redis no está disponible."""
+    try:
+        cache.set(key, data, ttl)
+    except Exception:
+        logger.exception("Cache.set falló (Redis caído?); continuando sin caché.")
+
+
 @login_required
 @require_http_methods(["GET"])
 def datos_dashboard(request):
@@ -68,7 +85,7 @@ def datos_dashboard(request):
     es_admin = rol == Usuario.Rol.ADMINISTRADOR
 
     cache_key = _build_cache_key(rol, "datos")
-    cached = cache.get(cache_key)
+    cached = _cache_get(cache_key)
     if cached:
         # Auditoría también en cache hit (no se debe saltar el registro)
         _registrar_auditoria_metricas(
@@ -150,7 +167,7 @@ def datos_dashboard(request):
                 for a in stock_por_almacen
             ]
 
-        cache.set(cache_key, data, CACHE_TTL)
+        _cache_set(cache_key, data, CACHE_TTL)
 
         _registrar_auditoria_metricas(
             request,
