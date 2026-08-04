@@ -29,20 +29,14 @@ CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins_env.split(",") if o.stri
 # SSL / HTTPS
 # ============================================================================
 
-# SECURE_SSL_REDIRECT deshabilitado: Nginx maneja SSL termination
+# Deshabilitado temporalmente: despliegue HTTP-only en la capa gratuita de EC2.
+# Rehabilitar (True) cuando se active HTTPS con dominio y certificados.
 SECURE_SSL_REDIRECT = False
-
-# HSTS activo (Nginx puede agregarlo también, pero doble defensa no daña)
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-# Header para detectar HTTPS detrás de proxy
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# Cookies seguras: Nginx maneja TLS termination con redirect 301 en el bloque 80
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 # ============================================================================
 # Base de datos (RDS/Aurora via DATABASE_URL)
