@@ -75,6 +75,14 @@ class TestFinanzasViews:
         assert "ventas" in data
         assert "valor_inventario" in data
 
+    def test_datos_finanzas_devuelve_error_json_si_falla(self, authenticated_client, monkeypatch):
+        import apps.finanzas.views as views
+        monkeypatch.setattr(views, "_calcular_datos_finanzas", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+        response = authenticated_client.get(reverse("datos_finanzas"))
+        assert response.status_code == 500
+        data = json.loads(response.content)
+        assert "error" in data
+
 
 @pytest.mark.django_db
 class TestFacturaArchivo:

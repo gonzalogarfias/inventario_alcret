@@ -4,6 +4,9 @@
 {% block page_subtitle %}Dashboard financiero{% endblock %}
 {% block content %}
 <div class="space-y-6" x-data="finanzasCharts()" x-init="init()">
+    <div x-show="error" x-cloak class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        No se pudieron cargar los datos financieros. <span x-text="error"></span>
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white rounded-xl shadow-sm border-0 p-5">
             <div class="flex items-center justify-between">
@@ -112,12 +115,24 @@ function finanzasCharts() {
         totalCompras: 0,
         totalVentas: 0,
         chart: null,
+        error: "",
         async init() {
-            await this.cargarDatos();
+            try {
+                await this.cargarDatos();
+            } catch (e) {
+                console.error("Finanzas: no se pudieron cargar los datos", e);
+                this.error = e.message || String(e);
+            }
         },
         async cargarDatos() {
             const res = await fetch("{% url 'datos_finanzas' %}");
+            if (!res.ok) {
+                throw new Error("El servidor respondió " + res.status);
+            }
             const data = await res.json();
+            if (!data || data.error) {
+                throw new Error(data.error || "Respuesta vacía del servidor");
+            }
             this.valorInventario = data.valor_inventario;
             this.costoPromedio = data.costo_promedio;
             this.totalCompras = data.compras.reduce((a, b) => a + b, 0);

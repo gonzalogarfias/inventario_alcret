@@ -7,7 +7,6 @@ from django.db.models import DecimalField, F, Sum
 from django.db.models.functions import TruncMonth
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from apps.inventario.models import Movimiento, Producto, Stock
@@ -95,7 +94,20 @@ def datos_finanzas(request):
     if not _check_roles(request, ROLES_FINANZAS):
         return JsonResponse({"error": "Forbidden"}, status=403)
 
-    hoy = timezone.now().date()
+    try:
+        return JsonResponse(_calcular_datos_finanzas())
+    except Exception as exc:
+        logger.exception("Error al generar datos financieros: %s", exc)
+        return JsonResponse(
+            {"error": "Error interno al generar datos financieros."},
+            status=500,
+        )
+
+
+def _calcular_datos_finanzas():
+    from datetime import date
+
+    hoy = date.today()
     doce_meses = hoy - timedelta(days=365)
 
     # Antes se sumaba "cantidad" (unidades de stock) y se mostraba con
@@ -158,7 +170,7 @@ def datos_finanzas(request):
 
     labels = sorted(set(list(compras_por_mes.keys()) + list(ventas_por_mes.keys()) + list(facturas_data.keys())))
 
-    return JsonResponse({
+    return {
         "labels": labels,
         "compras": [compras_por_mes.get(label, 0) for label in labels],
         "ventas": [ventas_por_mes.get(label, 0) for label in labels],
@@ -166,4 +178,4 @@ def datos_finanzas(request):
         "facturas_ventas": [facturas_data.get(label, {}).get("VENTA", 0) for label in labels],
         "valor_inventario": float(valor_inventario),
         "costo_promedio": float(costo_promedio),
-    })
+    }
