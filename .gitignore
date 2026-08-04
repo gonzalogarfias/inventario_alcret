@@ -22,6 +22,9 @@ facturas/
 # Testing
 .coverage
 
+# Node / Tailwind
+node_modules/
+
 # Environment
 .env
 .env.local

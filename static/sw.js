@@ -1,40 +1,53 @@
-// static/js/sw.js
-const CACHE_STATIC = 'alcret-static-v2';
+// Service Worker — ALCRET PWA
+const CACHE_STATIC = 'alcret-static-v3';
 const CACHE_PAGES = 'alcret-pages-v2';
 const CACHE_API = 'alcret-api-v1';
 
+// Recursos precacheados al instalar. Todos existen en el repositorio
+// (tailwind.css se genera con `npm run build:css`).
 const STATIC_FILES = [
     '/',
-    '/static/manifest.json',
     '/static/css/tailwind.css',
-    '/static/js/app.js',
     '/static/img/logo-icon.png',
     '/static/img/logo.png',
 ];
 
 // URLs que NUNCA deben cachearse
 const NETWORK_ONLY = [
-    /\/api\//,
     /\/admin\//,
     /\/accounts\/logout\//,
     /\/exportar\//,
+    /\/facturas\/.*\/archivo\//,
+];
+
+// URLs de API dinámicas (network-first, sin fallback offline)
+const API_URLS = [
+    /\/api\/datos-dashboard\//,
+    /\/finanzas\/api\/datos\//,
 ];
 
 // URLs que son vistas de solo lectura (cacheables offline)
 const READONLY_PAGES = [
     /^\/productos\/$/,
+    /^\/productos\/\?/,
+    /^\/productos\/.+/,
     /^\/almacenes\/$/,
     /^\/categorias\/$/,
     /^\/movimientos\/$/,
     /^\/finanzas\/$/,
-    /^\/finanzas\/subir\//,
 ];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_STATIC)
-            .then((cache) => cache.addAll(STATIC_FILES))
-            .catch((err) => console.error('SW install error:', err))
+            .then((cache) =>
+                // Precache resiliente: un recurso ausente no rompe la instalación
+                Promise.all(
+                    STATIC_FILES.map((url) =>
+                        cache.add(url).catch(() => console.warn('SW: no se pudo precachear', url))
+                    )
+                )
+            )
     );
     self.skipWaiting();
 });
@@ -57,39 +70,25 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Solo GET
+    // Solo GET y mismo origen
     if (request.method !== 'GET') return;
-
-    // Solo mismo origen
     if (url.origin !== self.location.origin) return;
 
-    // Network-only: APIs, admin, logout, exports
+    // Network-only: admin, logout, exports, descargas de facturas
     if (NETWORK_ONLY.some((pattern) => pattern.test(url.pathname))) {
         event.respondWith(fetch(request));
         return;
     }
 
-    // API endpoints: network first, cache fallback (stale-while-revalidate)
-    if (url.pathname.startsWith('/api/')) {
-        event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    if (response.ok) {
-                        const clone = response.clone();
-                        caches.open(CACHE_API).then((cache) =>
-                            cache.put(request, clone)
-                        );
-                    }
-                    return response;
-                })
-                .catch(() => caches.match(request))
-        );
+    // APIs dinámicas: network-only (datos de sesión; nunca cacheados)
+    if (API_URLS.some((pattern) => pattern.test(url.pathname))) {
+        event.respondWith(fetch(request));
         return;
     }
 
     // Static assets: cache first
-    if (request.destination === 'script' || 
-        request.destination === 'style' || 
+    if (request.destination === 'script' ||
+        request.destination === 'style' ||
         request.destination === 'image' ||
         request.destination === 'font') {
         event.respondWith(

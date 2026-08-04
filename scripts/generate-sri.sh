@@ -3,7 +3,6 @@
 
 urls=(
     "https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"
-    "https://unpkg.com/htmx.org@1.9.12"
     "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
 )
 

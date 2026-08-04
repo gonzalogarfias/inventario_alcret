@@ -5,7 +5,7 @@ Sistema web para gestión de inventarios con control de stock, movimientos, usua
 ## Stack
 
 - **Backend:** Django 4.2 + Django REST Framework
-- **Frontend:** Tailwind CSS (CDN), Alpine.js, Chart.js
+- **Frontend:** Tailwind CSS (compilado vía CLI), Alpine.js, Chart.js
 - **Base de datos:** SQLite (desarrollo) / PostgreSQL (producción)
 - **Seguridad:** django-axes (rate limiting), Argon2, django-guardian
 - **PWA:** Service Worker + Manifest para instalación en dispositivos
@@ -39,6 +39,13 @@ cp .env.example .env
 # Migrar y correr
 python manage.py migrate
 python manage.py runserver
+```
+
+## Compilar estilos (Tailwind)
+
+```bash
+npm install
+npm run build:css   # genera static/css/tailwind.css (committeado)
 ```
 
 ## Tests

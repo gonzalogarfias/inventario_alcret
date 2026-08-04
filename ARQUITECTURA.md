@@ -19,7 +19,7 @@ Este archivo define el esqueleto técnico del proyecto. Ningún agente debe modi
 | Tooling | Ruff + isort + pytest | Configuración unificada en pyproject.toml |
 | Base de datos | PostgreSQL 15+ | Transacciones ACID obligatorias para movimientos de inventario |
 | Caché / cola | Redis + Celery | Tareas asíncronas (correos, sync CRM, reportes) |
-| Estilos | Tailwind CSS (CDN play) | Sin proceso de build en desarrollo. En producción: CLI de Tailwind |
+| Estilos | Tailwind CSS (CLI compilado) | Compilación estática vía `npm run build:css` → `static/css/tailwind.css`. Sin CDN en runtime |
 | Despliegue | Gunicorn + Nginx | Separación de responsabilidades. Nginx sirve estáticos y termina TLS |
 | PWA | Service Worker + Manifest | Caché offline de vistas de solo lectura. Push notifications futuro |
 
@@ -37,7 +37,7 @@ Este archivo define el esqueleto técnico del proyecto. Ningún agente debe modi
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  CAPA 1 — Cliente PWA                                   │
-│  Alpine.js · HTMX · Service Worker · JWT en HttpOnly    │
+│  Alpine.js · Service Worker · JWT en HttpOnly   │
 └────────────────────┬────────────────────────────────────┘
                      │ HTTPS / TLS 1.2+
 ┌────────────────────▼────────────────────────────────────┐
@@ -88,7 +88,7 @@ proyecto/
 │
 ├── templates/               # Templates Django globales
 │   ├── base.html            # Layout principal con Alpine.js
-│   ├── components/          # Fragmentos reutilizables (HTMX targets)
+│   ├── components/          # Fragmentos reutilizables
 │   └── finanzas/            # Dashboard financiero y formulario de subida de facturas
 │
 ├── static/
@@ -166,7 +166,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 | `SC-8` | Confidencialidad en tránsito | TLS 1.2+ obligatorio, `EMAIL_USE_TLS = True` |
 | `SC-13` | Criptografía aprobada | `Argon2` para hashes, `secrets` para tokens, AES-256 en reposo |
 | `SC-23` | Autenticidad de sesión | `SESSION_COOKIE_HTTPONLY`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE=Strict`, cierre al cerrar navegador |
-| `SC-23(1)` | Content Security Policy | `SecurityHeadersMiddleware` en `apps/shared/middleware.py` — CSP permite CDNs (cdn.jsdelivr.net, tailwindcss.com, unpkg.com, fonts.googleapis.com, fonts.gstatic.com), `'unsafe-inline'` y `'unsafe-eval'` para Alpine.js, `frame-ancestors 'none'`, `base-uri 'self'` |
+| `SC-23(1)` | Content Security Policy | `SecurityHeadersMiddleware` en `apps/shared/middleware.py` — CSP permite CDN de Alpine.js/Chart.js (cdn.jsdelivr.net) y Google Fonts (fonts.googleapis.com, fonts.gstatic.com), `'unsafe-inline'` y `'unsafe-eval'` para Alpine.js, `frame-ancestors 'none'`, `base-uri 'self'` |
 | `SI-10` | Validación de entradas | Validadores Django en todos los serializers y forms + `csrf_middleware` presente + `SECURE_CONTENT_TYPE_NOSNIFF` |
 
 ### Configuración de seguridad base — settings/base.py
@@ -223,12 +223,12 @@ class SecurityHeadersMiddleware:
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-            "https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com; "
+            "https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' "
-            "https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://fonts.googleapis.com; "
+            "https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "img-src 'self' data:; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "connect-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
             "form-action 'self'; "
             "frame-ancestors 'none'; "
             "base-uri 'self';"

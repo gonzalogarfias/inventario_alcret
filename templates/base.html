@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ALCRET - Inventario{% endblock %}</title>
+    <title>{% block title %}{% block page_title %}ALCRET - Inventario{% endblock %} · ALCRET{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/logo-icon.png' %}">
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#0B3C95">
@@ -20,50 +20,15 @@
     <!-- Google Fonts con SRI (si aplica) o al menos subresource hint -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS (CDN dev — en producción compilar con CLI) -->
-    <!-- NOTA: Para producción, reemplazar por {% static 'css/tailwind.css' %} -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS compilado (npm run build:css) -->
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet">
     
     <!-- Alpine.js 3.14.3 con SRI -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
     
-    <!-- HTMX 1.9.12 -->
-    <script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
-    
     <!-- Chart.js 4.4.7 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#eef3fa', 100: '#d4e1f2', 200: '#a9c3e6', 300: '#7ea5d9',
-                            400: '#5387cd', 500: '#2869c0', 600: '#0B3C95', 700: '#09307a',
-                            800: '#07245f', 900: '#051844',
-                        },
-                        surface: {
-                            DEFAULT: '#FAFAFC',
-                            card: '#FFFFFF',
-                        },
-                        ink: {
-                            DEFAULT: '#1E2229',
-                            secondary: '#687182',
-                            muted: '#9CA3AF',
-                        },
-                        success: { bg: '#E6F4EA', text: '#137333', border: '#CEEAD6' },
-                        error: { bg: '#FCE8E6', text: '#C5221F', border: '#F5C6C2' },
-                        warning: { bg: '#FEF7E0', text: '#B06000', border: '#FDEAA8' },
-                        info: { bg: '#E8F0FE', text: '#1A56DB', border: '#C3D9FC' },
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         [x-cloak] { display: none !important; }
         .sidebar-transition { transition: width 0.3s ease; }
@@ -71,15 +36,10 @@
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
         .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-        @keyframes slide-in { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-        .animate-slide-in { animation: slide-in 0.3s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .page-enter { animation: fadeInUp 0.35s ease-out both; }
         .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-        .btn-primary { transition: all 0.2s ease; }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,60,149,0.2); }
-        .btn-primary:active { transform: translateY(0); }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -119,10 +79,7 @@
     </div>
 
     {% include "components/bottom_nav.html" %}
-    {% include "components/toast.html" %}
 
-    <script src="{% static 'js/app.js' %}"></script>
-    
     <!-- Service Worker con update check -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -162,20 +119,6 @@
                 },
                 toggleSidebar() {
                     this.sidebarOpen = !this.sidebarOpen
-                },
-                toast(message, type = 'success') {
-                    const container = document.getElementById('toast-container')
-                    const colors = {
-                        success: 'bg-success-bg border-success-border text-success-text',
-                        error: 'bg-error-bg border-error-border text-error-text',
-                        warning: 'bg-warning-bg border-warning-border text-warning-text',
-                        info: 'bg-info-bg border-info-border text-info-text'
-                    }
-                    const el = document.createElement('div')
-                    el.className = `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-lg border ${colors[type] || colors.info} animate-slide-in`
-                    el.innerHTML = `<span class="flex-1">${message}</span><button onclick="this.closest('div').remove()" class="text-current opacity-40 hover:opacity-100">&times;</button>`
-                    container.appendChild(el)
-                    setTimeout(() => { el.remove() }, 4000)
                 }
             }
         }
