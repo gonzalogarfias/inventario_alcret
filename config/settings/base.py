@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.integracion",
     "apps.alertas",
     "apps.finanzas",
+    "apps.shared",
 ]
 
 # ============================================================================
