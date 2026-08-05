@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from django.urls import reverse
 
+from apps.auditoria.models import AuditLog
 from apps.inventario.models import Almacen, Categoria, Movimiento, Producto, Stock
 
 
@@ -277,6 +278,19 @@ class TestExportViews:
         response = authenticated_client.get(reverse("exportar_movimientos_excel"))
         assert response.status_code == 200
         assert "application/vnd.openxmlformats" in response["Content-Type"]
+
+
+    def test_vendedor_puede_exportar_productos_csv(self, client_vendedor, producto):
+        response = client_vendedor.get(reverse("exportar_productos_csv"))
+        assert response.status_code == 200
+        assert response["Content-Type"] == "text/csv"
+        content = b"".join(response.streaming_content)
+        assert producto.sku.encode() in content
+
+    def test_exportar_productos_registra_auditoria_especifica(self, authenticated_client, producto):
+        response = authenticated_client.get(reverse("exportar_productos_csv"))
+        assert response.status_code == 200
+        assert AuditLog.objects.filter(evento=AuditLog.Evento.EXPORTACION_PRODUCTOS).exists()
 
     def test_exportar_productos_requiere_login(self, client):
         response = client.get(reverse("exportar_productos_csv"))

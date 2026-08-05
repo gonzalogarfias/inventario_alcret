@@ -1,12 +1,16 @@
 import uuid
 from decimal import Decimal
+from pathlib import Path
 
 from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 
 
 def upload_factura_path(instance, filename):
-    return f"facturas/{instance.tipo.lower()}/{instance.fecha:%Y/%m}/{filename}"
+    """Genera una ruta privada y no predecible para archivos de factura."""
+    extension = Path(filename).suffix.lower()
+    nombre_seguro = f"{uuid.uuid4()}{extension}"
+    return f"facturas/{instance.tipo.lower()}/{instance.fecha:%Y/%m}/{nombre_seguro}"
 
 
 class Factura(models.Model):

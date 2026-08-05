@@ -3,6 +3,7 @@ import json
 import pytest
 from django.urls import reverse
 
+from apps.auditoria.models import AuditLog
 from apps.finanzas.models import Factura
 
 
@@ -54,12 +55,76 @@ class TestFinanzasViews:
             tipo=Movimiento.Tipo.ENTRADA, producto=producto,
             almacen=almacen, cantidad=10, realizada_por=usuario_admin,
         )
-        form = FacturaForm()
+        form = FacturaForm(user=usuario_admin)
         campo = form.fields["movimiento"]
         assert producto.nombre in campo.label_from_instance(mov)
         assert producto.sku in campo.label_from_instance(mov)
         assert almacen.nombre in campo.label_from_instance(mov)
         assert "Entrada" in campo.label_from_instance(mov)
+
+
+    def test_upload_rechaza_pdf_con_cabecera_invalida(self, authenticated_client, producto, almacen, usuario_admin):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        archivo = SimpleUploadedFile("factura.pdf", b"no es pdf", content_type="application/pdf")
+        authenticated_client.post(reverse("factura_upload"), {
+            "tipo": Factura.Tipo.COMPRA,
+            "numero": "BAD-PDF",
+            "proveedor_cliente": "Test SA",
+            "monto": "500.00",
+            "fecha": "2026-07-01",
+            "movimiento": mov.pk,
+            "observaciones": "Test",
+            "archivo": archivo,
+        })
+        assert not Factura.objects.filter(numero="BAD-PDF").exists()
+
+    def test_upload_vendedor_no_puede_subir_compra(self, client_vendedor, producto, almacen, usuario_admin):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        archivo = SimpleUploadedFile("factura.pdf", b"%PDF-1.4 test content", content_type="application/pdf")
+        client_vendedor.post(reverse("factura_upload"), {
+            "tipo": Factura.Tipo.COMPRA,
+            "numero": "VEN-COMPRA",
+            "proveedor_cliente": "Test SA",
+            "monto": "500.00",
+            "fecha": "2026-07-01",
+            "movimiento": mov.pk,
+            "observaciones": "Test",
+            "archivo": archivo,
+        })
+        assert not Factura.objects.filter(numero="VEN-COMPRA").exists()
+
+    def test_upload_registra_evento_especifico_de_auditoria(self, authenticated_client, producto, almacen, usuario_admin):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.inventario.models import Movimiento
+        mov = Movimiento.objects.create(
+            tipo=Movimiento.Tipo.ENTRADA, producto=producto,
+            almacen=almacen, cantidad=10, realizada_por=usuario_admin,
+        )
+        archivo = SimpleUploadedFile("factura.pdf", b"%PDF-1.4 test content", content_type="application/pdf")
+        authenticated_client.post(reverse("factura_upload"), {
+            "tipo": Factura.Tipo.COMPRA,
+            "numero": "AUD-FACT",
+            "proveedor_cliente": "Test SA",
+            "monto": "500.00",
+            "fecha": "2026-07-01",
+            "movimiento": mov.pk,
+            "observaciones": "Test",
+            "archivo": archivo,
+        })
+        assert AuditLog.objects.filter(evento=AuditLog.Evento.FACTURA_SUBIDA).exists()
 
     def test_datos_finanzas_api(self, authenticated_client, producto, almacen, usuario_admin):
         from apps.inventario.models import Movimiento
@@ -122,7 +187,7 @@ class TestFacturaArchivo:
 
     def test_archivo_acceso_otros_roles(self, client_vendedor, client_almacenista, producto, almacen, usuario_admin):
         factura = self._crear_factura(producto, almacen, usuario_admin)
-        assert client_vendedor.get(reverse("factura_archivo", args=[factura.pk])).status_code == 200
+        assert client_vendedor.get(reverse("factura_archivo", args=[factura.pk])).status_code == 302
         assert client_almacenista.get(reverse("factura_archivo", args=[factura.pk])).status_code == 200
 
     def test_archivo_inexistente_404(self, authenticated_client):
