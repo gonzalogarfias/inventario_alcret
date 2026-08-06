@@ -1,6 +1,6 @@
 // Service Worker — ALCRET PWA
 const CACHE_STATIC = 'alcret-static-v3';
-const CACHE_PAGES = 'alcret-pages-v2';
+const CACHE_PAGES = 'alcret-pages-v3';
 const CACHE_API = 'alcret-api-v1';
 
 // Recursos precacheados al instalar. Todos existen en el repositorio
@@ -26,7 +26,10 @@ const API_URLS = [
     /\/finanzas\/api\/datos\//,
 ];
 
-// URLs que son vistas de solo lectura (cacheables offline)
+// URLs que son vistas de solo lectura (cacheables offline).
+// NOTA: /finanzas/ se deja deliberadamente fuera: es un dashboard
+// financiero (siempre fresco, y evita cachear datos sensibles de un
+// usuario en navegadores compartidos).
 const READONLY_PAGES = [
     /^\/productos\/$/,
     /^\/productos\/\?/,
@@ -34,7 +37,6 @@ const READONLY_PAGES = [
     /^\/almacenes\/$/,
     /^\/categorias\/$/,
     /^\/movimientos\/$/,
-    /^\/finanzas\/$/,
 ];
 
 self.addEventListener('install', (event) => {
