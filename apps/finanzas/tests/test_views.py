@@ -185,8 +185,13 @@ class TestFacturaArchivo:
         contenido = b"".join(response.streaming_content)
         assert b"%PDF-1.4 contenido" in contenido
 
-    def test_archivo_acceso_otros_roles(self, client_vendedor, client_almacenista, producto, almacen, usuario_admin):
+    def test_archivo_acceso_otros_roles(self, usuario_vendedor, usuario_almacenista, producto, almacen, usuario_admin):
+        from django.test import Client
         factura = self._crear_factura(producto, almacen, usuario_admin)
+        client_vendedor = Client()
+        client_vendedor.force_login(usuario_vendedor)
+        client_almacenista = Client()
+        client_almacenista.force_login(usuario_almacenista)
         assert client_vendedor.get(reverse("factura_archivo", args=[factura.pk])).status_code == 302
         assert client_almacenista.get(reverse("factura_archivo", args=[factura.pk])).status_code == 200
 
