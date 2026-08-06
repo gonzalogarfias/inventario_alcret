@@ -13,6 +13,26 @@ import uuid
 from django.db import connection, models, transaction
 from django.db.models import Q
 
+from apps.shared.audit_events import (
+    EVENTO_AJUSTE,
+    EVENTO_ALERTA_RESUELTA,
+    EVENTO_ENTRADA,
+    EVENTO_EXPORTACION,
+    EVENTO_EXPORTACION_MOVIMIENTOS,
+    EVENTO_EXPORTACION_PRODUCTOS,
+    EVENTO_FACTURA_DESCARGADA,
+    EVENTO_FACTURA_SUBIDA,
+    EVENTO_LOGIN_FAIL,
+    EVENTO_LOGIN_OK,
+    EVENTO_PASSWORD_CHANGED,
+    EVENTO_PASSWORD_RESET,
+    EVENTO_PERMISO_CAMBIADO,
+    EVENTO_SALIDA,
+    EVENTO_SYNC_CRM,
+    EVENTO_USUARIO_CREADO,
+    EVENTO_USUARIO_DESACTIVADO,
+)
+
 # Clave arbitraria fija para el advisory lock de la cadena de auditoría.
 # Debe ser la misma en todo el código; no depende de ninguna fila.
 _AUDITLOG_CHAIN_LOCK_KEY = 918273645
@@ -29,19 +49,23 @@ class AuditLog(models.Model):
     """
 
     class Evento(models.TextChoices):
-        ENTRADA = "ENTRADA", "Entrada de inventario"
-        SALIDA = "SALIDA", "Salida de inventario"
-        AJUSTE = "AJUSTE", "Ajuste / merma"
-        LOGIN_OK = "LOGIN_OK", "Inicio de sesión exitoso"
-        LOGIN_FAIL = "LOGIN_FAIL", "Intento de sesión fallido"
-        PASSWORD_RESET = "PASSWORD_RESET", "Recuperación de contraseña"
-        PASSWORD_CHANGED = "PASSWORD_CHANGED", "Contraseña cambiada"
-        USUARIO_CREADO = "USUARIO_CREADO", "Usuario creado"
-        USUARIO_DESACTIVADO = "USUARIO_DESACTIVADO", "Usuario desactivado"
-        PERMISO_CAMBIADO = "PERMISO_CAMBIADO", "Permiso modificado"
-        EXPORTACION = "EXPORTACION", "Exportación de datos"
-        SYNC_CRM = "SYNC_CRM", "Sincronización con CRM"
-        ALERTA_RESUELTA = "ALERTA_RESUELTA", "Alerta resuelta"
+        ENTRADA = EVENTO_ENTRADA, "Entrada de inventario"
+        SALIDA = EVENTO_SALIDA, "Salida de inventario"
+        AJUSTE = EVENTO_AJUSTE, "Ajuste / merma"
+        LOGIN_OK = EVENTO_LOGIN_OK, "Inicio de sesión exitoso"
+        LOGIN_FAIL = EVENTO_LOGIN_FAIL, "Intento de sesión fallido"
+        PASSWORD_RESET = EVENTO_PASSWORD_RESET, "Recuperación de contraseña"
+        PASSWORD_CHANGED = EVENTO_PASSWORD_CHANGED, "Contraseña cambiada"
+        USUARIO_CREADO = EVENTO_USUARIO_CREADO, "Usuario creado"
+        USUARIO_DESACTIVADO = EVENTO_USUARIO_DESACTIVADO, "Usuario desactivado"
+        PERMISO_CAMBIADO = EVENTO_PERMISO_CAMBIADO, "Permiso modificado"
+        EXPORTACION = EVENTO_EXPORTACION, "Exportación de datos"
+        EXPORTACION_PRODUCTOS = EVENTO_EXPORTACION_PRODUCTOS, "Exportación de productos"
+        EXPORTACION_MOVIMIENTOS = EVENTO_EXPORTACION_MOVIMIENTOS, "Exportación de movimientos"
+        FACTURA_SUBIDA = EVENTO_FACTURA_SUBIDA, "Factura subida"
+        FACTURA_DESCARGADA = EVENTO_FACTURA_DESCARGADA, "Factura descargada"
+        SYNC_CRM = EVENTO_SYNC_CRM, "Sincronización con CRM"
+        ALERTA_RESUELTA = EVENTO_ALERTA_RESUELTA, "Alerta resuelta"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     evento = models.CharField(max_length=30, choices=Evento.choices)

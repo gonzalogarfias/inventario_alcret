@@ -1,0 +1,38 @@
+# Generated manually to persist AuditLog.Evento choices added for business audit events.
+
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("auditoria", "0004_auditlog_auditoria_a_evento_1f676b_idx_and_more"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="auditlog",
+            name="evento",
+            field=models.CharField(
+                choices=[
+                    ("ENTRADA", "Entrada de inventario"),
+                    ("SALIDA", "Salida de inventario"),
+                    ("AJUSTE", "Ajuste / merma"),
+                    ("LOGIN_OK", "Inicio de sesión exitoso"),
+                    ("LOGIN_FAIL", "Intento de sesión fallido"),
+                    ("PASSWORD_RESET", "Recuperación de contraseña"),
+                    ("PASSWORD_CHANGED", "Contraseña cambiada"),
+                    ("USUARIO_CREADO", "Usuario creado"),
+                    ("USUARIO_DESACTIVADO", "Usuario desactivado"),
+                    ("PERMISO_CAMBIADO", "Permiso modificado"),
+                    ("EXPORTACION", "Exportación de datos"),
+                    ("EXPORTACION_PRODUCTOS", "Exportación de productos"),
+                    ("EXPORTACION_MOVIMIENTOS", "Exportación de movimientos"),
+                    ("FACTURA_SUBIDA", "Factura subida"),
+                    ("FACTURA_DESCARGADA", "Factura descargada"),
+                    ("SYNC_CRM", "Sincronización con CRM"),
+                    ("ALERTA_RESUELTA", "Alerta resuelta"),
+                ],
+                max_length=30,
+            ),
+        ),
+    ]

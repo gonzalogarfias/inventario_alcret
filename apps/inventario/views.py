@@ -24,7 +24,11 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
+from apps.shared.audit_events import EVENTO_EXPORTACION_MOVIMIENTOS, EVENTO_EXPORTACION_PRODUCTOS
 from apps.shared.csv_utils import sanitizar_celda
+from apps.shared.middleware import get_current_request_ip
+from apps.shared.permissions import puede_exportar_inventario
+from apps.shared.services import registrar_audit_log
 from apps.shared.value_objects import ValidationError
 from apps.usuarios.models import Usuario
 
@@ -396,7 +400,7 @@ def _generar_csv_productos():
 @login_required
 def exportar_productos_csv(request):
     """Exporta productos activos a CSV con streaming."""
-    if request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+    if not puede_exportar_inventario(request.user):
         messages.error(request, "No tenés permiso para exportar datos.")
         return redirect("producto_list")
     response = StreamingHttpResponse(
@@ -404,13 +408,19 @@ def exportar_productos_csv(request):
         content_type="text/csv",
     )
     response["Content-Disposition"] = 'attachment; filename="productos.csv"'
+    registrar_audit_log(
+        evento=EVENTO_EXPORTACION_PRODUCTOS,
+        usuario=request.user,
+        ip_address=get_current_request_ip(),
+        datos={"formato": "csv"},
+    )
     return response
 
 
 @login_required
 def exportar_productos_excel(request):
     """Exporta productos activos a Excel (.xlsx)."""
-    if request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+    if not puede_exportar_inventario(request.user):
         messages.error(request, "No tenés permiso para exportar datos.")
         return redirect("producto_list")
     wb = Workbook()
@@ -425,6 +435,12 @@ def exportar_productos_excel(request):
     )
     response["Content-Disposition"] = 'attachment; filename="productos.xlsx"'
     wb.save(response)
+    registrar_audit_log(
+        evento=EVENTO_EXPORTACION_PRODUCTOS,
+        usuario=request.user,
+        ip_address=get_current_request_ip(),
+        datos={"formato": "xlsx"},
+    )
     return response
 
 
@@ -460,7 +476,7 @@ def _generar_csv_movimientos(tipo=None):
 @login_required
 def exportar_movimientos_csv(request):
     """Exporta movimientos a CSV con streaming."""
-    if request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+    if not puede_exportar_inventario(request.user):
         messages.error(request, "No tenés permiso para exportar datos.")
         return redirect("movimiento_list")
     tipo = request.GET.get("tipo")
@@ -469,13 +485,19 @@ def exportar_movimientos_csv(request):
         content_type="text/csv",
     )
     response["Content-Disposition"] = 'attachment; filename="movimientos.csv"'
+    registrar_audit_log(
+        evento=EVENTO_EXPORTACION_MOVIMIENTOS,
+        usuario=request.user,
+        ip_address=get_current_request_ip(),
+        datos={"formato": "csv", "tipo": tipo or ""},
+    )
     return response
 
 
 @login_required
 def exportar_movimientos_excel(request):
     """Exporta movimientos a Excel (.xlsx)."""
-    if request.user.rol not in (Usuario.Rol.ADMINISTRADOR, Usuario.Rol.ALMACENISTA):
+    if not puede_exportar_inventario(request.user):
         messages.error(request, "No tenés permiso para exportar datos.")
         return redirect("movimiento_list")
     wb = Workbook()
@@ -503,4 +525,10 @@ def exportar_movimientos_excel(request):
     )
     response["Content-Disposition"] = 'attachment; filename="movimientos.xlsx"'
     wb.save(response)
+    registrar_audit_log(
+        evento=EVENTO_EXPORTACION_MOVIMIENTOS,
+        usuario=request.user,
+        ip_address=get_current_request_ip(),
+        datos={"formato": "xlsx", "tipo": tipo or ""},
+    )
     return response

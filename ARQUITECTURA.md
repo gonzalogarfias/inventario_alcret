@@ -500,3 +500,53 @@ openpyxl                 # exportación de reportes Excel
 ---
 
 *Documento generado como contrato técnico del proyecto. Actualizar con cada decisión arquitectónica relevante.*
+
+---
+
+## Actualización operativa — seguridad, RBAC y CI/CD privado
+
+### Matriz RBAC como política ejecutable
+
+La matriz de permisos documentada debe mantenerse sincronizada con `apps/shared/permissions.py`, que centraliza decisiones de negocio reutilizadas por vistas y formularios. Esto evita divergencias entre módulos cuando se agregan nuevos roles o acciones.
+
+Reglas reforzadas:
+
+- Exportación de inventario: ADMIN, VENDEDOR y ALMACENISTA.
+- Finanzas: ADMIN, VENDEDOR y ALMACENISTA pueden ver dashboard.
+- Facturas COMPRA: ADMIN y ALMACENISTA.
+- Facturas VENTA: ADMIN y VENDEDOR.
+- Descarga de facturas: sigue la misma granularidad que la subida por tipo.
+
+### Archivos de facturas
+
+Los archivos de facturas deben tratarse como documentos privados:
+
+- No exponer `/media/` de forma pública desde Nginx.
+- Servir descargas exclusivamente por vistas autenticadas/autorizadas.
+- Validar extensión, MIME declarado, tamaño máximo y cabecera básica.
+- Guardar con nombres no predecibles para evitar enumeración y fuga de nombres originales.
+- En producción, complementar con antivirus o servicio equivalente antes de procesar documentos de terceros.
+
+### Auditoría de negocio
+
+Las acciones financieras y exportaciones deben registrar eventos específicos, no eventos genéricos. Eventos actuales añadidos:
+
+- `EXPORTACION_PRODUCTOS`
+- `EXPORTACION_MOVIMIENTOS`
+- `FACTURA_SUBIDA`
+- `FACTURA_DESCARGADA`
+
+### CI/CD privado
+
+El pipeline puede mantenerse fuera del repositorio por privacidad. Aun así, el contrato mínimo recomendado para cada push/PR privado es:
+
+```bash
+python -m compileall apps config
+ruff check .
+pytest -q
+python manage.py check --deploy --settings=config.settings.production
+npm ci
+npm run build:css
+```
+
+Si el CI inyecta secretos o despliega infraestructura privada, mantener esos archivos en `.gitignore` es aceptable; lo importante es que el contrato anterior quede documentado y sea reproducible localmente.
