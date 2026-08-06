@@ -12,6 +12,9 @@ class TestIntegracionSignals:
     @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.integracion.signals.enviar_evento_crm.delay")
     def test_movimiento_encola_tarea_crm(self, mock_delay, producto, almacen, usuario_admin):
+        from apps.inventario.models import Stock
+
+        Stock.objects.create(producto=producto, almacen=almacen, cantidad=Decimal("50"))
         Movimiento.objects.create(
             tipo=Movimiento.Tipo.ENTRADA,
             producto=producto,
@@ -22,8 +25,13 @@ class TestIntegracionSignals:
         mock_delay.assert_called_once()
         args, kwargs = mock_delay.call_args
         assert kwargs["evento"] == "stock.actualizado"
-        assert kwargs["payload"]["producto_id"] == str(producto.pk)
-        assert kwargs["payload"]["cantidad"] == "10"
+        payload = kwargs["payload"]
+        assert payload["producto_id"] == str(producto.pk)
+        assert payload["almacen_id"] == str(almacen.pk)
+        assert payload["sku_o_vin"] == (producto.vin or producto.sku)
+        assert payload["nombre_unidad"] == producto.nombre
+        assert payload["cantidad_disponible"] == "60"
+        assert payload["tipo_movimiento"] == Movimiento.Tipo.ENTRADA
 
     @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.integracion.signals.enviar_evento_crm.delay")

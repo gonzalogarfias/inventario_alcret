@@ -34,4 +34,6 @@ urlpatterns = [
     path("", include("apps.metricas.urls")),
     path("alertas/", include("apps.alertas.urls")),
     path("", include("apps.finanzas.urls")),
+    path("clientes/", include("apps.clientes.urls")),
+    path("cotizaciones/", include("apps.cotizaciones.urls")),
 ]

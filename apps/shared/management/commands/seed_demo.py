@@ -54,6 +54,8 @@ class Command(BaseCommand):
             almacenes = self._crear_almacenes()
             productos = self._crear_productos(categorias)
             self._crear_movimientos(productos, almacenes, admin)
+            clientes = self._crear_clientes()
+            self._crear_cotizaciones(clientes, productos, vendedor)
             self._crear_facturas(admin)
             self._crear_metricas()
             self._crear_integracion()
@@ -70,12 +72,16 @@ class Command(BaseCommand):
     def _limpiar(self):
         from apps.alertas.models import Alerta, AlertaConfig
         from apps.auditoria.models import AuditLog
+        from apps.clientes.models import Cliente
+        from apps.cotizaciones.models import Cotizacion
         from apps.finanzas.models import Factura
         from apps.integracion.models import ClaveCRM, SyncLog, WebhookCRM
         from apps.metricas.models import DashboardConfig, ReporteProgramado
 
         for model in [
             Factura,
+            Cotizacion,
+            Cliente,
             Movimiento,
             Stock,
             ReporteProgramado,
@@ -152,10 +158,10 @@ class Command(BaseCommand):
 
     def _crear_categorias(self):
         datos = [
-            ("Electrónica", "Componentes y dispositivos electrónicos"),
-            ("Ferretería", "Herramientas y materiales"),
-            ("Oficina", "Insumos de oficina"),
-            ("Limpieza", "Productos de limpieza"),
+            ("Tractocamiones", "Tractocamiones de línea pesada"),
+            ("Remolques", "Remolques, cajas secas y plataformas"),
+            ("Refacciones", "Refacciones y consumibles"),
+            ("Servicios", "Servicios de mantenimiento y operación"),
         ]
         categorias = []
         for nombre, desc in datos:
@@ -184,25 +190,36 @@ class Command(BaseCommand):
         from django.db.models import Sum
 
         catalogo = [
-            # (sku, nombre, categoria_idx, precio, costo, stock_minimo, stock_inicial)
-            ("EL-001", "Router WiFi 6", 0, Decimal("120.00"), Decimal("80.00"), 5, 40),
-            ("EL-002", "Cámara IP 4K", 0, Decimal("250.00"), Decimal("160.00"), 3, 20),
-            ("EL-003", "Switch 8 puertos", 0, Decimal("85.00"), Decimal("55.00"), 4, 30),
-            ("FE-001", "Taladro percutor", 1, Decimal("95.00"), Decimal("62.00"), 6, 15),
-            ("FE-002", "Caja de herramientas", 1, Decimal("45.00"), Decimal("28.00"), 8, 25),
-            ("OF-001", "Resma papel A4", 2, Decimal("8.00"), Decimal("5.50"), 20, 100),
-            ("OF-002", "Tóner impresora", 2, Decimal("120.00"), Decimal("85.00"), 4, 12),
-            ("OF-003", "Cuaderno A5", 2, Decimal("3.50"), Decimal("2.00"), 30, 80),
-            ("LI-001", "Detergente 5L", 3, Decimal("22.00"), Decimal("14.00"), 10, 50),
-            ("LI-002", "Alcohol al 70% 1L", 3, Decimal("5.00"), Decimal("3.20"), 25, 60),
+            # (sku, nombre, vin, categoria_idx, precio, costo, stock_minimo, stock_inicial)
+            ("KW-T680-001", "Kenworth T680 2024", "3HHDMABN7RL000001",
+             0, Decimal("1520000.00"), Decimal("1350000.00"), 1, 3),
+            ("KW-T680-002", "Kenworth T680 2023", "3HHDMABN6RL000002",
+             0, Decimal("1480000.00"), Decimal("1310000.00"), 1, 2),
+            ("KW-W900-001", "Kenworth W900L 2024", "3HHDMABN7RL000003",
+             0, Decimal("1650000.00"), Decimal("1460000.00"), 1, 2),
+            ("KW-T800-001", "Kenworth T800 2023", "3HHDMABN6RL000004",
+             0, Decimal("1440000.00"), Decimal("1280000.00"), 1, 3),
+            ("PT-579-001", "Peterbilt 579 2024", "3HHDMABN7RL000005",
+             0, Decimal("1580000.00"), Decimal("1400000.00"), 1, 2),
+            ("PT-389-001", "Peterbilt 389 2023", "3HHDMABN6RL000006",
+             0, Decimal("1620000.00"), Decimal("1430000.00"), 1, 2),
+            ("REM-CS53-001", "Remolque Caja Seca 53 pies", "3HHDMABN7RL000007",
+             1, Decimal("520000.00"), Decimal("450000.00"), 1, 4),
+            ("REM-PL40-001", "Remolque Plataforma 40 pies", "3HHDMABN6RL000008",
+             1, Decimal("480000.00"), Decimal("410000.00"), 1, 3),
+            ("REF-ACE-001", "Aceite motor diésel 19L", "",
+             2, Decimal("2800.00"), Decimal("2100.00"), 3, 15),
+            ("SVC-INS-001", "Inspección mecánica anual", "",
+             3, Decimal("3500.00"), Decimal("2200.00"), 1, 10),
         ]
 
         productos = []
-        for sku, nombre, idx, precio, costo, minimo, inicial in catalogo:
+        for sku, nombre, vin, idx, precio, costo, minimo, inicial in catalogo:
             prod, _ = Producto.objects.get_or_create(
                 sku=sku,
                 defaults={
                     "nombre": nombre,
+                    "vin": vin,
                     "categoria": categorias[idx],
                     "precio_venta": precio,
                     "costo_promedio": costo,
@@ -221,6 +238,71 @@ class Command(BaseCommand):
             productos.append(prod)
         self.stdout.write(f"Productos: {len(productos)} creados")
         return productos
+
+    # ------------------------------------------------------------------ #
+    # Clientes
+    # ------------------------------------------------------------------ #
+
+    def _crear_clientes(self):
+        from apps.clientes.models import Cliente
+
+        datos = [
+            ("Transportes del Norte S.A. de C.V.", "Juan Pérez",
+             "juan.perez@transportesnorte.com", "+528112345678", "TNO900101ABC"),
+            ("Grupo Logístico del Bajío", "María García",
+             "maria.garcia@glb.com.mx", "+524441234567", "GLB850423HJK"),
+            ("Carga Express S.R.L.", "Carlos López",
+             "carlos.lopez@cargaexpress.mx", "+526612345678", "CEE920312QRT"),
+            ("Fletes del Pacífico", "Ana Torres",
+             "ana.torres@fletespacifico.com", "+523341234567", "FPT880505MNB"),
+        ]
+        clientes = []
+        for empresa, nombre, email, telefono, rfc in datos:
+            cliente, _ = Cliente.objects.get_or_create(
+                email=email,
+                defaults={
+                    "empresa": empresa,
+                    "nombre": nombre,
+                    "telefono": telefono,
+                    "rfc": rfc,
+                },
+            )
+            clientes.append(cliente)
+        self.stdout.write(f"Clientes: {len(clientes)} creados")
+        return clientes
+
+    # ------------------------------------------------------------------ #
+    # Cotizaciones
+    # ------------------------------------------------------------------ #
+
+    def _crear_cotizaciones(self, clientes, productos, vendedor):
+        from apps.cotizaciones.models import Cotizacion
+
+        rng = random.Random(11)
+        unidades = [p for p in productos if p.vin]
+        creadas = 0
+        for i, cliente in enumerate(clientes):
+            for j in range(rng.randint(1, 3)):
+                unidad = rng.choice(unidades)
+                folio = f"COT-{creadas + 1:05d}"
+                _, created = Cotizacion.objects.get_or_create(
+                    folio=folio,
+                    defaults={
+                        "cliente": cliente,
+                        "monto": unidad.precio_venta,
+                        "esquema": rng.choice(
+                            [Cotizacion.Esquema.CONTADO, Cotizacion.Esquema.CREDITO, Cotizacion.Esquema.ARRENDAMIENTO]
+                        ),
+                        "unidad_interes": unidad,
+                        "vendedor": vendedor,
+                        "estado": rng.choice(
+                            [Cotizacion.Estado.ENVIADA, Cotizacion.Estado.ENVIADA, Cotizacion.Estado.GANADA]
+                        ),
+                    },
+                )
+                if created:
+                    creadas += 1
+        self.stdout.write(f"Cotizaciones: {creadas} creadas")
 
     # ------------------------------------------------------------------ #
     # Movimientos
