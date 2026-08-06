@@ -9,29 +9,23 @@ from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
+from apps.auditoria.models import AuditLog
 from apps.inventario.models import Movimiento, Producto, Stock
 from apps.shared.middleware import get_current_request_ip
+from apps.shared.permissions import puede_descargar_factura, puede_ver_finanzas
 from apps.shared.services import registrar_audit_log
-from apps.usuarios.models import Usuario
 
 from .forms import FacturaForm
 from .models import Factura
 
 logger = logging.getLogger(__name__)
 
-ROLES_FINANZAS = [Usuario.Rol.ADMINISTRADOR, Usuario.Rol.VENDEDOR, Usuario.Rol.ALMACENISTA]
-
-
-def _check_roles(request, roles):
-    if request.user.rol not in roles:
-        messages.error(request, "No tenés permiso para realizar esta acción.")
-        return False
-    return True
 
 
 @login_required
 def finanzas_dashboard(request):
-    if not _check_roles(request, ROLES_FINANZAS):
+    if not puede_ver_finanzas(request.user):
+        messages.error(request, "No tenés permiso para realizar esta acción.")
         return redirect("dashboard")
     facturas = Factura.objects.select_related("movimiento", "subido_por").order_by("-fecha")[:20]
     return render(request, "finanzas/dashboard.html", {
@@ -41,17 +35,17 @@ def finanzas_dashboard(request):
 
 @login_required
 def factura_upload(request):
-    if not _check_roles(request, ROLES_FINANZAS):
+    if not puede_ver_finanzas(request.user):
+        messages.error(request, "No tenés permiso para realizar esta acción.")
         return redirect("dashboard")
-    rol = request.user.rol
     if request.method == "POST":
-        form = FacturaForm(request.POST, request.FILES, user_rol=rol)
+        form = FacturaForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             factura = form.save(commit=False)
             factura.subido_por = request.user
             factura.save()
             registrar_audit_log(
-                evento="EXPORTACION",
+                evento=AuditLog.Evento.FACTURA_SUBIDA,
                 usuario=request.user,
                 ip_address=get_current_request_ip(),
                 datos={
@@ -65,7 +59,7 @@ def factura_upload(request):
             logger.info("Factura subida: %s por %s", factura.id, request.user.email)
             return redirect("finanzas_dashboard")
     else:
-        form = FacturaForm(user_rol=rol)
+        form = FacturaForm(user=request.user)
     return render(request, "finanzas/factura_form.html", {"form": form})
 
 
@@ -77,21 +71,31 @@ def factura_archivo(request, pk):
     (nginx no expone /media/): cada descarga pasa por esta vista, que
     aplica el mismo chequeo de roles que el resto del módulo.
     """
-    if not _check_roles(request, ROLES_FINANZAS):
+    if not puede_ver_finanzas(request.user):
+        messages.error(request, "No tenés permiso para realizar esta acción.")
         return redirect("dashboard")
     factura = get_object_or_404(Factura, pk=pk)
+    if not puede_descargar_factura(request.user, factura):
+        messages.error(request, "No tenés permiso para descargar este tipo de factura.")
+        return redirect("finanzas_dashboard")
     try:
         archivo = factura.archivo.open("rb")
     except (FileNotFoundError, ValueError):
         messages.error(request, "El archivo de la factura no está disponible.")
         return redirect("finanzas_dashboard")
+    registrar_audit_log(
+        evento=AuditLog.Evento.FACTURA_DESCARGADA,
+        usuario=request.user,
+        ip_address=get_current_request_ip(),
+        datos={"factura_id": str(factura.id), "tipo": factura.tipo},
+    )
     return FileResponse(archivo, as_attachment=True)
 
 
 @login_required
 @require_http_methods(["GET"])
 def datos_finanzas(request):
-    if not _check_roles(request, ROLES_FINANZAS):
+    if not puede_ver_finanzas(request.user):
         return JsonResponse({"error": "Forbidden"}, status=403)
 
     try:

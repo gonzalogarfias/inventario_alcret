@@ -40,6 +40,10 @@ class AuditLog(models.Model):
         USUARIO_DESACTIVADO = "USUARIO_DESACTIVADO", "Usuario desactivado"
         PERMISO_CAMBIADO = "PERMISO_CAMBIADO", "Permiso modificado"
         EXPORTACION = "EXPORTACION", "Exportación de datos"
+        EXPORTACION_PRODUCTOS = "EXPORTACION_PRODUCTOS", "Exportación de productos"
+        EXPORTACION_MOVIMIENTOS = "EXPORTACION_MOVIMIENTOS", "Exportación de movimientos"
+        FACTURA_SUBIDA = "FACTURA_SUBIDA", "Factura subida"
+        FACTURA_DESCARGADA = "FACTURA_DESCARGADA", "Factura descargada"
         SYNC_CRM = "SYNC_CRM", "Sincronización con CRM"
         ALERTA_RESUELTA = "ALERTA_RESUELTA", "Alerta resuelta"
 
