@@ -11,9 +11,9 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ["sku", "nombre", "categoria", "precio_venta", "stock_minimo", "activo"]
+    list_display = ["sku", "vin", "nombre", "categoria", "precio_venta", "stock_minimo", "activo"]
     list_filter = ["categoria", "activo"]
-    search_fields = ["sku", "nombre"]
+    search_fields = ["sku", "vin", "nombre"]
 
 
 @admin.register(Almacen)

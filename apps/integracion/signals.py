@@ -21,13 +21,21 @@ def publicar_movimiento_al_crm(sender, instance, created, **kwargs):
         logger.debug("CRM_WEBHOOK_URL no configurado, skipping CRM task")
         return
     try:
+        producto = instance.producto
+        stock = (
+            producto.stocks.filter(almacen=instance.almacen).first()
+        )
+        cantidad_disponible = stock.cantidad if stock else 0
+        cantidad_str = f"{cantidad_disponible.normalize():f}" if cantidad_disponible else "0"
         enviar_evento_crm.delay(
             evento="stock.actualizado",
             payload={
-                "producto_id": str(instance.producto_id),
-                "cantidad": str(instance.cantidad),
-                "tipo": instance.tipo,
                 "almacen_id": str(instance.almacen_id),
+                "producto_id": str(producto.id),
+                "sku_o_vin": producto.vin or producto.sku,
+                "nombre_unidad": producto.nombre,
+                "cantidad_disponible": cantidad_str,
+                "tipo_movimiento": instance.tipo,
             },
         )
     except Exception as e:

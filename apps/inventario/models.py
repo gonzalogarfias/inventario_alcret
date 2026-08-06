@@ -25,6 +25,11 @@ class Producto(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sku = models.CharField(max_length=50, unique=True)
     nombre = models.CharField(max_length=200)
+    vin = models.CharField(
+        max_length=17,
+        blank=True,
+        help_text="Número de chasis/VIN para unidades (tractocamiones, remolques)",
+    )
     descripcion = models.TextField(blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="productos")
     precio_venta = models.DecimalField(
