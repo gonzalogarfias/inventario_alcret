@@ -44,13 +44,14 @@ class TestCotizacionSignals:
         args, kwargs = mock_delay.call_args
         assert kwargs["evento"] == "cotizacion.creada"
         payload = kwargs["payload"]
-        assert payload == {
-            "cliente_email": cliente.email,
-            "monto": "1500000.00",
-            "esquema": Cotizacion.Esquema.CREDITO,
-            "unidad_interes": "3HHDMABN7RL000001",
-            "vendedor_email": usuario_vendedor.email,
-        }
+        assert payload["cliente_email"] == cliente.email
+        assert payload["cliente_id"] == str(cliente.id)
+        assert payload["monto"] == "1500000.00"
+        assert payload["esquema"] == Cotizacion.Esquema.CREDITO
+        assert payload["folio"] == "COT-00001"
+        assert payload["unidad_interes"] == "3HHDMABN7RL000001"
+        assert payload["unidad_interes_id"] == str(unidad.id)
+        assert payload["vendedor_email"] == usuario_vendedor.email
 
     @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.cotizaciones.signals.enviar_evento_crm.delay")

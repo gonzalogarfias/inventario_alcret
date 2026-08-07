@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -13,6 +14,13 @@ from .tasks import enviar_evento_crm
 logger = logging.getLogger(__name__)
 
 
+def _fmt_decimal(valor):
+    if valor is None:
+        return None
+    d = Decimal(str(valor))
+    return f"{d.normalize():f}" if d else "0"
+
+
 @receiver(post_save, sender=Movimiento)
 def publicar_movimiento_al_crm(sender, instance, created, **kwargs):
     if not created:
@@ -25,17 +33,29 @@ def publicar_movimiento_al_crm(sender, instance, created, **kwargs):
         stock = (
             producto.stocks.filter(almacen=instance.almacen).first()
         )
-        cantidad_disponible = stock.cantidad if stock else 0
-        cantidad_str = f"{cantidad_disponible.normalize():f}" if cantidad_disponible else "0"
+        cantidad_disponible = stock.cantidad if stock else None
+        realizada_por = instance.realizada_por
         enviar_evento_crm.delay(
             evento="stock.actualizado",
             payload={
+                "movimiento_id": str(instance.id),
                 "almacen_id": str(instance.almacen_id),
+                "almacen_codigo": instance.almacen.nombre,
+                "almacen_nombre": instance.almacen.nombre,
+                "almacen_ubicacion": instance.almacen.ubicacion,
                 "producto_id": str(producto.id),
+                "producto_sku": producto.sku,
+                "producto_vin": producto.vin or None,
                 "sku_o_vin": producto.vin or producto.sku,
                 "nombre_unidad": producto.nombre,
-                "cantidad_disponible": cantidad_str,
+                "cantidad_disponible": _fmt_decimal(cantidad_disponible),
+                "cantidad_movimiento": _fmt_decimal(instance.cantidad),
                 "tipo_movimiento": instance.tipo,
+                "motivo": instance.motivo,
+                "costo_unitario": _fmt_decimal(instance.costo_unitario),
+                "realizada_por_email": realizada_por.email if realizada_por else None,
+                "realizada_por_nombre": realizada_por.nombre if realizada_por else None,
+                "fecha_movimiento": instance.created_at.isoformat(),
             },
         )
     except Exception as e:

@@ -33,6 +33,8 @@ def enviar_evento_crm(self, evento, payload):
     import requests
     timestamp = timezone.now().isoformat()
     body = json.dumps({
+        "version": 1,
+        "evento_id": str(sync_log.id),
         "evento": evento,
         "payload": payload,
         "timestamp": timestamp,

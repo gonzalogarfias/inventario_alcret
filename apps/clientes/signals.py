@@ -20,11 +20,15 @@ def publicar_cliente_al_crm(sender, instance, created, **kwargs):
         enviar_evento_crm.delay(
             evento="cliente.creado" if created else "cliente.actualizado",
             payload={
+                "cliente_id": str(instance.id),
                 "empresa": instance.empresa,
                 "nombre": instance.nombre,
                 "email": instance.email,
                 "telefono": instance.telefono,
                 "rfc": instance.rfc,
+                "activo": instance.activo,
+                "created_at": instance.created_at.isoformat(),
+                "updated_at": instance.updated_at.isoformat(),
             },
         )
     except Exception as e:

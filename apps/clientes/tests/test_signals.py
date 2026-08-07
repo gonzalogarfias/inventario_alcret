@@ -23,11 +23,15 @@ class TestClienteSignals:
         assert kwargs["evento"] == "cliente.creado"
         payload = kwargs["payload"]
         assert payload == {
+            "cliente_id": str(cliente.id),
             "empresa": cliente.empresa,
             "nombre": cliente.nombre,
             "email": cliente.email,
             "telefono": cliente.telefono,
             "rfc": cliente.rfc,
+            "activo": cliente.activo,
+            "created_at": cliente.created_at.isoformat(),
+            "updated_at": cliente.updated_at.isoformat(),
         }
 
     @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")

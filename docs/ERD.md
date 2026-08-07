@@ -1,3 +1,7 @@
+# Diagrama de Entidad-Relación
+
+> Fuente de verdad: modelos Django en `apps/*/models.py`. Actualizado al 2026-08-07.
+
 ```mermaid
 erDiagram
     Categoria ||--o{ Producto : ""
@@ -9,6 +13,11 @@ erDiagram
     Producto ||--o| AlertaConfig : ""
     Producto ||--o{ Alerta : ""
     Usuario ||--o{ AuditLog : ""
+    Cliente ||--o{ Cotizacion : ""
+    Producto ||--o{ Cotizacion : ""
+    Usuario ||--o{ Cotizacion : ""
+    Movimiento ||--o{ Factura : ""
+    Usuario ||--o{ Factura : ""
 
     Categoria {
         uuid id PK
@@ -22,6 +31,7 @@ erDiagram
         uuid id PK
         string sku UK
         string nombre
+        string vin
         text descripcion
         uuid categoria_id FK
         decimal precio_venta
@@ -73,6 +83,47 @@ erDiagram
         datetime ultimo_acceso
         int intentos_fallidos
         datetime bloqueado_hasta
+    }
+
+    Cliente {
+        uuid id PK
+        string empresa
+        string nombre
+        string email
+        string telefono
+        string rfc
+        bool activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    Cotizacion {
+        uuid id PK
+        string folio UK
+        uuid cliente_id FK
+        decimal monto
+        string esquema
+        uuid unidad_interes_id FK
+        uuid vendedor_id FK
+        string estado
+        text observaciones
+        datetime created_at
+        datetime updated_at
+    }
+
+    Factura {
+        uuid id PK
+        string tipo
+        string numero
+        string proveedor_cliente
+        decimal monto
+        date fecha
+        file archivo
+        uuid movimiento_id FK
+        text observaciones
+        uuid subido_por_id FK
+        datetime created_at
+        datetime updated_at
     }
 
     AlertaConfig {
@@ -149,16 +200,37 @@ erDiagram
         json destinatarios
         bool activo
         datetime created_at
+        datetime updated_at
     }
 ```
 
-## Diagrama de Entidad-Relación
+## Resumen
 
-- **14 modelos** en 6 apps (inventario, usuarios, alertas, auditoria, integracion, metricas)
-- Todas las PK son **UUID v4**
+- **17 modelos** en **9 apps**: `inventario`, `usuarios`, `alertas`, `auditoria`, `integracion`, `metricas`, `clientes`, `cotizaciones`, `finanzas`.
+- Todas las PK son **UUID v4**.
 - Relaciones clave:
-  - `Producto` ↔ `Stock` ↔ `Almacen` (inventario por almacén)
-  - `Producto` → `Movimiento` ← `Almacen` / `Usuario` (trazabilidad)
+  - `Producto` ↔ `Stock` ↔ `Almacen` (inventario por almacén, `UNIQUE (producto, almacen)`)
+  - `Producto` → `Movimiento` ← `Almacen` / `Usuario` (trazabilidad, signo en `SALIDA`)
+  - `Producto` → `Cotizacion` ← `Cliente` / `Usuario` (cotizaciones y ventas)
+  - `Movimiento` → `Factura` (facturas COMPRA/VENTA ligadas al movimiento)
   - `Producto` → `Alerta` (alertas automáticas de stock bajo)
   - `Usuario` → `AuditLog` (cadena de hash inmutables)
-- Entidades standalone (sin FK): `WebhookCRM`, `SyncLog`, `ClaveCRM`, `DashboardConfig`, `ReporteProgramado`
+
+## Restricciones de unicidad e índices relevantes
+
+| Tabla | Restricción |
+|---|---|
+| `Stock` | `UNIQUE (producto_id, almacen_id)` + check `cantidad >= 0` |
+| `AlertaConfig` | `UNIQUE (producto_id)` (producto nullable → también puede haber config global) |
+| `Producto` | `sku` UK |
+| `Almacen` | `nombre` UK |
+| `Categoria` | `nombre` UK |
+| `Usuario` | `email` UK |
+| `Cotizacion` | `folio` UK |
+| `Cliente` | índice en `email` y `rfc` |
+| `AuditLog` | índices en `(evento, -timestamp)`, `(usuario, -timestamp)`, `(ip_address, -timestamp)` |
+| `Factura` | índices en `(tipo, -fecha)` y `fecha` |
+
+## Entidades standalone (sin FK)
+
+`WebhookCRM`, `SyncLog`, `ClaveCRM` (integración CRM) y `DashboardConfig`, `ReporteProgramado` (métricas).

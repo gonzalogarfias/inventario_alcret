@@ -84,7 +84,12 @@ class TestCrmTasks:
             assert call_kwargs["headers"]["X-Signature"] == firma_esperada
 
             # El cuerpo no debe modificarse después de firmarlo (integridad)
-            assert json.loads(cuerpo)["evento"] == "stock.actualizado"
+            body_parsed = json.loads(cuerpo)
+            assert body_parsed["evento"] == "stock.actualizado"
+            assert body_parsed["version"] == 1
+            assert body_parsed["evento_id"]
+            log = SyncLog.objects.latest("created_at")
+            assert body_parsed["evento_id"] == str(log.id)
 
 
 @pytest.mark.django_db

@@ -15,7 +15,7 @@ class TestIntegracionSignals:
         from apps.inventario.models import Stock
 
         Stock.objects.create(producto=producto, almacen=almacen, cantidad=Decimal("50"))
-        Movimiento.objects.create(
+        movimiento = Movimiento.objects.create(
             tipo=Movimiento.Tipo.ENTRADA,
             producto=producto,
             almacen=almacen,
@@ -26,12 +26,18 @@ class TestIntegracionSignals:
         args, kwargs = mock_delay.call_args
         assert kwargs["evento"] == "stock.actualizado"
         payload = kwargs["payload"]
+        assert payload["movimiento_id"] == str(movimiento.pk)
         assert payload["producto_id"] == str(producto.pk)
+        assert payload["producto_sku"] == producto.sku
         assert payload["almacen_id"] == str(almacen.pk)
+        assert payload["almacen_codigo"] == almacen.nombre
         assert payload["sku_o_vin"] == (producto.vin or producto.sku)
         assert payload["nombre_unidad"] == producto.nombre
         assert payload["cantidad_disponible"] == "60"
+        assert payload["cantidad_movimiento"] == "10"
         assert payload["tipo_movimiento"] == Movimiento.Tipo.ENTRADA
+        assert payload["realizada_por_email"] == usuario_admin.email
+        assert payload["fecha_movimiento"]
 
     @override_settings(CRM_WEBHOOK_URL="https://crm.example.com/webhook", CRM_HMAC_SECRET="test-secret")
     @patch("apps.integracion.signals.enviar_evento_crm.delay")
