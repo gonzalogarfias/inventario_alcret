@@ -1,24 +1,39 @@
 # ALCRET — Sistema de Gestión de Inventario
 
-Sistema web para gestión de inventarios con control de stock, movimientos, usuarios y auditoría.
+Sistema web para gestión de inventarios con control de stock, movimientos, clientes, facturación, integración CRM/SRI, usuarios y auditoría.
 
 ## Stack
 
-- **Backend:** Django 4.2 + Django REST Framework
-- **Frontend:** Tailwind CSS (compilado vía CLI), Alpine.js, Chart.js
+- **Backend:** Django 4.2 + Django REST Framework + Celery/Redis
+- **Frontend:** Tailwind CSS (CLI), Alpine.js, Chart.js, PWA (Service Worker + Manifest)
 - **Base de datos:** SQLite (desarrollo) / PostgreSQL (producción)
-- **Seguridad:** django-axes (rate limiting), Argon2, django-guardian
-- **PWA:** Service Worker + Manifest para instalación en dispositivos
+- **Seguridad:** django-axes (rate limiting), Argon2, django-guardian, auditoría de eventos
+
+## Módulos
+
+| App | Responsabilidad |
+|-----|----------------|
+| `inventario` | Productos, categorías, almacenes, movimientos y stock |
+| `clientes` | Gestión de clientes |
+| `cotizaciones` | Cotizaciones vinculadas a clientes |
+| `finanzas` | Facturas de compra/venta con archivos adjuntos |
+| `integracion` | Integración CRM externo y rotación de claves |
+| `alertas` | Alertas de stock mínimo para usuarios |
+| `auditoria` | Auditoría de eventos (login, password reset, CRUD) |
+| `metricas` | Reportes programados y métricas |
+| `usuarios` | Usuarios con roles (ADMIN, VENDEDOR, ALMACENISTA) |
+| `shared` | Utilidades transversales (middleware, permisos, validaciones) |
 
 ## Funcionalidades
 
-- Productos, categorías, almacenes y movimientos (entrada/salida/ajuste)
 - Control de stock mínimo y alertas
 - Dashboard con gráficos de stock y movimientos
-- Usuarios con roles (ADMIN, VENDEDOR, ALMACENISTA)
-- Auditoría de eventos (login, password reset, CRUD)
-- Exportación CSV/Excel
+- RBAC con roles y permisos por objeto (django-guardian)
+- Auditoría de eventos y exportación CSV/Excel
+- Facturas de compra/venta con adjuntos
+- Integración con CRM y generación SRI
 - Diseño responsivo con bottom nav en móvil y sidebar en desktop
+- PWA instalable y offline-first
 
 ## Inicio rápido
 
@@ -53,14 +68,6 @@ npm run build:css   # genera static/css/tailwind.css (committeado)
 ```bash
 pytest apps/ -v
 ```
-
-## Usuarios de prueba
-
-| Email | Contraseña | Rol |
-|-------|-----------|-----|
-| admin@test.com | Admin123! | ADMIN |
-| vendedor@test.com | Vendedor123! | VENDEDOR |
-| almacen@test.com | Almacen123! | ALMACENISTA |
 
 ## Licencia
 
