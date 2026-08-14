@@ -41,3 +41,9 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentación interna / confidencial
+ARQUITECTURA.md
+ALCRET_Plan_Remediacion_Seguridad.md
+docs/MANUAL_DE_PROCEDIMIENTOS_ALCRET.md
+docs/MANUAL DE PROCEDIMIENTOS PARA EL USUARIO ejemplo.docx
